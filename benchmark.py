@@ -27,12 +27,13 @@ from pathlib import Path
 from typing import Optional
 
 
-ROOT       = Path(__file__).parent
-GO_SRC     = ROOT / "go_src"
-CPP_SRC    = ROOT / "cpp_src"
-PY_SRC     = ROOT / "py_src"
-RESULTS    = ROOT / "results"
-BUILD_DIR  = ROOT / "build"
+ROOT      = Path(__file__).parent
+SRC       = ROOT / "tests"
+GO_NAME   = "goSrc.go"
+CPP_NAME  = "cppSrc.cpp"
+PY_NAME   = "pySrc.py"
+RESULTS   = ROOT / "results"
+BUILD_DIR = ROOT / "build"
 
 
 @dataclass
@@ -159,17 +160,24 @@ def run_benchmark(
     return res
 
 
+@dataclass
+class Benchmark:
+    name: str
+    srcPath: str
+    category: str
+    description: str
+
 BENCHMARKS = [
-    ("fibonacci_iter", "fibonacci.go",      "fibonacci.cpp",      "fibonacci.py",      "cpu",         "Fibonacci(40) iterative"),
-    ("fibonacci_rec",  "fib_recursive.go",  "fib_recursive.cpp",  "fib_recursive.py",  "cpu",         "Fibonacci(42) recursive — exponential call tree"),
-    ("prime_sieve",    "prime_sieve.go",    "prime_sieve.cpp",    "prime_sieve.py",    "cpu",         "Sieve of Eratosthenes up to 5 million"),
-    ("matrix_mul",     "matrix_mul.go",     "matrix_mul.cpp",     "matrix_mul.py",     "cpu",         "400x400 matrix multiplication (naive triple-loop)"),
-    ("sort_ints",      "sort_ints.go",      "sort_ints.cpp",      "sort_ints.py",      "cpu",         "Sort 10 million integers (stdlib sort)"),
-    ("json_roundtrip", "json_roundtrip.go", "json_roundtrip.cpp", "json_roundtrip.py", "data",        "Encode + decode 200 000 objects as JSON"),
-    ("string_build",   "string_build.go",   "string_build.cpp",   "string_build.py",   "data",        "Build string from 500 000 formatted tokens"),
-    ("hashmap",        "hashmap.go",        "hashmap.cpp",        "hashmap.py",        "data",        "Insert + read 2 million key-value pairs"),
-    ("file_io",        "file_io.go",        "file_io.cpp",        "file_io.py",        "io",          "Write then read 1 million lines to/from disk"),
-    ("concurrency",    "concurrency.go",    "concurrency.cpp",    "concurrency.py",    "concurrency", "1 000 goroutines/threads doing arithmetic"),
+    Benchmark("fibonacci_iter", "fibonacci",      "cpu",         "Fibonacci(40) iterative"),
+    Benchmark("fibonacci_rec",  "fibRecursive",   "cpu",         "Fibonacci(42) recursive — exponential call tree"),
+    Benchmark("prime_sieve",    "primeSieve",     "cpu",         "Sieve of Eratosthenes up to 5 million"),
+    Benchmark("matrix_mul",     "matrixMultiply", "cpu",         "400x400 matrix multiplication (naive triple-loop)"),
+    Benchmark("sort_ints",      "sorting",        "cpu",         "Sort 10 million integers (stdlib sort)"),
+    Benchmark("json_roundtrip", "jsonParser",     "data",        "Encode + decode 200 000 objects as JSON"),
+    Benchmark("string_build",   "stringBuilder",  "data",        "Build string from 500 000 formatted tokens"),
+    Benchmark("hashmap",        "hashmap",        "data",        "Insert + read 2 million key-value pairs"),
+    Benchmark("file_io",        "fileIO",         "io",          "Write then read 1 million lines to/from disk"),
+    Benchmark("concurrency",    "concurrency",    "concurrency", "1 000 goroutines/threads doing arithmetic"),
 ]
 
 
@@ -218,20 +226,20 @@ def main():
 
     languages = []
     if not args.no_go:
-        languages.append(("go",     GO_SRC))
+        languages.append("go")
     if not args.no_cpp:
-        languages.append(("cpp",    CPP_SRC))
+        languages.append("cpp")
     if not args.no_python:
-        languages.append(("python", PY_SRC))
+        languages.append("python")
 
     benchmarks = BENCHMARKS
     if args.filter:
-        benchmarks = [b for b in benchmarks if args.filter.lower() in b[0].lower()]
+        benchmarks = [b for b in benchmarks if args.filter.lower() in b.name.lower()]
 
     print(f"\n{BOLD}═══════════════════════════════════════════════════════{RESET}")
     print(f"{BOLD}  Multi-language Benchmark Suite{RESET}")
     print(f"{BOLD}═══════════════════════════════════════════════════════{RESET}")
-    print(f"  Languages : {', '.join(l for l,_ in languages)}")
+    print(f"  Languages : {', '.join(languages)}")
     print(f"  Benchmarks: {len(benchmarks)}")
     print(f"  Runs each : {args.runs}")
     print(f"  Timeout   : {args.timeout}s per run")
@@ -240,14 +248,15 @@ def main():
     all_results: list[BenchmarkResult] = []
     total_start = time.perf_counter()
 
-    for (bname, go_f, cpp_f, py_f, category, desc) in benchmarks:
-        src_map = {"go": GO_SRC / go_f, "cpp": CPP_SRC / cpp_f, "python": PY_SRC / py_f}
+    for benchmark in benchmarks:
+        src_dest = SRC / benchmark.srcPath
+        src_map = { "go": (src_dest / GO_NAME), "cpp": (src_dest / CPP_NAME), "python": (src_dest / PY_NAME) }
 
-        print(f"{BOLD}[{category.upper()}] {bname}{RESET}  {DIM}{desc}{RESET}")
+        print(f"{BOLD}[{benchmark.category.upper()}] {benchmark.name}{RESET}  {DIM}{benchmark.description}{RESET}")
 
-        for (lang, src_dir) in languages:
+        for lang in languages:
             src = src_map[lang]
-            r = run_benchmark(bname, lang, src, args.runs, args.timeout)
+            r = run_benchmark(benchmark.name, lang, src, args.runs, args.timeout)
             all_results.append(r)
             print_result(r)
 
@@ -263,9 +272,9 @@ def main():
     print(header)
     print("  " + "─" * (len(header) - 2))
 
-    for (bname, *_) in benchmarks:
+    for benchmark in benchmarks:
         row: dict[str, BenchmarkResult] = {
-            r.language: r for r in all_results if r.name == bname
+            r.language: r for r in all_results if r.name == benchmark.name
         }
         py_t  = row.get("python")
         go_t  = row.get("go")
@@ -285,7 +294,7 @@ def main():
             ratio = base.exec_mean_s / target.exec_mean_s
             return f"{ratio:>8.2f}x"
 
-        print(f"  {bname:<22} {fmt(py_t)} {fmt(go_t)} {fmt(cpp_t)}  "
+        print(f"  {benchmark.name:<22} {fmt(py_t)} {fmt(go_t)} {fmt(cpp_t)}  "
               f"{speedup(py_t, go_t):>12}  {speedup(py_t, cpp_t):>12}")
 
     print(f"\n  Total wall time: {elapsed_total:.1f}s")
@@ -294,11 +303,11 @@ def main():
     out_path = Path(args.output) if args.output else RESULTS / f"run_{ts}.json"
 
     payload = {
-        "timestamp": ts,
+        "timestamp":          ts,
         "runs_per_benchmark": args.runs,
-        "timeout_s": args.timeout,
-        "total_wall_s": round(elapsed_total, 3),
-        "results": [asdict(r) for r in all_results],
+        "timeout_s":          args.timeout,
+        "total_wall_s":       round(elapsed_total, 3),
+        "results":            [asdict(r) for r in all_results],
     }
     out_path.write_text(json.dumps(payload, indent=2))
     print(f"\n  Results written → {out_path}\n")
