@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Benchmark Visualizer</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0a0c0f;
+    --surface:   #111418;
+    --border:    #1e2329;
+    --border2:   #2a3140;
+    --go:        #00acd7;
+    --cpp:       #659ad2;
+    --py:        #ffd43b;
+    --go-dim:    #00acd740;
+    --cpp-dim:   #659ad240;
+    --py-dim:    #ffd43b40;
+    --text:      #e8eaed;
+    --muted:     #6b7685;
+    --accent:    #00acd7;
+    --red:       #ff6b6b;
+    --green:     #51cf66;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  /* ── TOP BAR ── */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header h1 {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: .02em;
+    color: var(--text);
+  }
+  header .pipe { color: var(--border2); }
+  .tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    background: var(--border);
+    color: var(--muted);
+  }
+  .tag.go  { background: #00acd715; color: var(--go);  border: 1px solid #00acd730; }
+  .tag.cpp { background: #659ad215; color: var(--cpp); border: 1px solid #659ad230; }
+  .tag.py  { background: #ffd43b15; color: var(--py);  border: 1px solid #ffd43b30; }
+
+  .load-btn {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 6px 14px;
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--muted);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .load-btn:hover { border-color: var(--accent); color: var(--text); }
+  #file-input { display: none; }
+
+  /* ── DROP ZONE ── */
+  #drop-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    height: calc(100vh - 57px);
+    border: 2px dashed var(--border2);
+    margin: 24px;
+    border-radius: 8px;
+    transition: border-color .2s, background .2s;
+    cursor: pointer;
+  }
+  #drop-zone.drag-over { border-color: var(--accent); background: #00acd708; }
+  #drop-zone svg { opacity: .3; }
+  #drop-zone p { color: var(--muted); font-family: var(--mono); font-size: 13px; }
+  #drop-zone small { color: var(--border2); font-family: var(--mono); font-size: 11px; }
+  .or-btn {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 8px 20px;
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--muted);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all .15s;
+    margin-top: 4px;
+  }
+  .or-btn:hover { border-color: var(--accent); color: var(--text); }
+
+  /* ── MAIN LAYOUT ── */
+  #main { display: none; }
+
+  /* ── SUMMARY STRIP ── */
+  .summary-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .stat-cell {
+    background: var(--surface);
+    padding: 16px 24px;
+  }
+  .stat-cell .label { font-size: 11px; color: var(--muted); font-family: var(--mono); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .06em; }
+  .stat-cell .value { font-family: var(--mono); font-size: 22px; font-weight: 600; }
+  .stat-cell .value.go  { color: var(--go); }
+  .stat-cell .value.cpp { color: var(--cpp); }
+  .stat-cell .value.py  { color: var(--py); }
+  .stat-cell .value.neutral { color: var(--text); }
+
+  /* ── CONTROLS ── */
+  .controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 14px 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .ctrl-label { font-family: var(--mono); font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-right: 4px; }
+  .btn-group { display: flex; gap: 4px; }
+  .ctrl-btn {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 5px 12px;
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--muted);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .ctrl-btn:hover { border-color: var(--border2); color: var(--text); }
+  .ctrl-btn.active { background: var(--border); color: var(--text); border-color: var(--border2); }
+  .divider { width: 1px; height: 20px; background: var(--border2); margin: 0 8px; }
+
+  /* ── OVERVIEW CHART ── */
+  .overview-section {
+    padding: 28px 28px 0;
+  }
+  .section-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--muted);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .overview-chart-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 20px 20px 12px;
+  }
+  .overview-chart-wrap canvas { max-height: 280px; }
+
+  /* ── GRID OF PER-BENCHMARK CHARTS ── */
+  .grid-section { padding: 28px; }
+  .bench-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 16px;
+  }
+  .bench-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 18px 12px;
+    transition: border-color .15s;
+  }
+  .bench-card:hover { border-color: var(--border2); }
+  .bench-card-header {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .bench-name {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .bench-category {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+  .winner-badge {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 3px;
+  }
+  .winner-badge.go  { background: #00acd715; color: var(--go);  border: 1px solid #00acd730; }
+  .winner-badge.cpp { background: #659ad215; color: var(--cpp); border: 1px solid #659ad230; }
+  .winner-badge.py  { background: #ffd43b15; color: var(--py);  border: 1px solid #ffd43b30; }
+  .bench-canvas-wrap { position: relative; height: 120px; }
+  .bench-stats {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 4px;
+    margin-top: 12px;
+  }
+  .bstat {
+    background: var(--bg);
+    border-radius: 4px;
+    padding: 6px 8px;
+  }
+  .bstat .bl { font-family: var(--mono); font-size: 10px; margin-bottom: 3px; }
+  .bstat .bv { font-family: var(--mono); font-size: 12px; font-weight: 600; }
+  .bstat .bs { font-family: var(--mono); font-size: 10px; color: var(--muted); }
+  .bstat.go  .bl { color: var(--go); }
+  .bstat.cpp .bl { color: var(--cpp); }
+  .bstat.py  .bl { color: var(--py); }
+
+  /* ── SPEEDUP TABLE ── */
+  .table-section { padding: 0 28px 28px; }
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { border-bottom: 1px solid var(--border); }
+  thead th {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--muted);
+    padding: 12px 18px;
+    text-align: left;
+    font-weight: 500;
+  }
+  thead th:not(:first-child) { text-align: right; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #ffffff04; }
+  tbody td {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 11px 18px;
+    color: var(--text);
+  }
+  tbody td:not(:first-child) { text-align: right; }
+  .td-bench { color: var(--text); font-weight: 500; }
+  .td-go  { color: var(--go);  }
+  .td-cpp { color: var(--cpp); }
+  .td-py  { color: var(--py);  }
+  .td-speedup { color: var(--muted); }
+  .td-speedup.fast { color: var(--green); }
+  .td-speedup.slow { color: var(--red); }
+  .td-speedup.med  { color: var(--py); }
+  .td-skip { color: var(--border2); }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  /* ── FADE IN ── */
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateY(12px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+  .bench-card { animation: fadeUp .25s ease both; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>bench<span class="pipe">/</span>viz</h1>
+  <span class="tag go">Go</span>
+  <span class="tag cpp">C++</span>
+  <span class="tag py">Python</span>
+  <span id="run-meta" class="tag" style="display:none"></span>
+  <button class="load-btn" onclick="document.getElementById('file-input').click()">Load JSON ↑</button>
+  <input type="file" id="file-input" accept=".json">
+</header>
+
+<!-- DROP ZONE -->
+<div id="drop-zone">
+  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+    <polyline points="14 2 14 8 20 8"/>
+    <line x1="12" y1="18" x2="12" y2="12"/>
+    <polyline points="9 15 12 12 15 15"/>
+  </svg>
+  <p>Drop benchmark JSON here</p>
+  <small>output from benchmark.py</small>
+  <button class="or-btn" onclick="loadDemo()">Load demo data</button>
+</div>
+
+<!-- MAIN DASHBOARD -->
+<div id="main">
+  <!-- Summary strip -->
+  <div class="summary-strip" id="summary-strip"></div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <span class="ctrl-label">metric</span>
+    <div class="btn-group">
+      <button class="ctrl-btn active" data-metric="exec_mean_s" onclick="setMetric(this,'exec_mean_s')">execution</button>
+      <button class="ctrl-btn" data-metric="compile_s" onclick="setMetric(this,'compile_s')">compile</button>
+      <button class="ctrl-btn" data-metric="total_s" onclick="setMetric(this,'total_s')">total</button>
+    </div>
+    <div class="divider"></div>
+    <span class="ctrl-label">scale</span>
+    <div class="btn-group">
+      <button class="ctrl-btn active" onclick="setScale(this,'linear')">linear</button>
+      <button class="ctrl-btn" onclick="setScale(this,'logarithmic')">log</button>
+    </div>
+  </div>
+
+  <!-- Overview chart -->
+  <div class="overview-section">
+    <div class="section-title">overview — all benchmarks</div>
+    <div class="overview-chart-wrap">
+      <canvas id="overview-chart"></canvas>
+    </div>
+  </div>
+
+  <!-- Per-benchmark grid -->
+  <div class="grid-section">
+    <div class="section-title">per benchmark</div>
+    <div class="bench-grid" id="bench-grid"></div>
+  </div>
+
+  <!-- Speedup table -->
+  <div class="table-section">
+    <div class="section-title">speedup table — execution time vs Python</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>benchmark</th>
+            <th style="color:var(--py)">python</th>
+            <th style="color:var(--go)">go</th>
+            <th style="color:var(--cpp)">c++</th>
+            <th>go speedup</th>
+            <th>c++ speedup</th>
+            <th>winner</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────────
+let DATA = null;
+let metric = 'exec_mean_s';
+let scaleType = 'linear';
+let overviewChart = null;
+const miniCharts = {};
+
+const LANG_COLOR = { go: '#00acd7', cpp: '#659ad2', python: '#ffd43b' };
+const LANG_DIM   = { go: '#00acd740', cpp: '#659ad240', python: '#ffd43b40' };
+const CATEGORIES = {
+  fibonacci_iter: 'cpu', fibonacci_rec: 'cpu', prime_sieve: 'cpu',
+  matrix_mul: 'cpu', sort_ints: 'cpu', json_roundtrip: 'data',
+  string_build: 'data', hashmap: 'data', file_io: 'io', concurrency: 'concurrency'
+};
+
+// Chart.js global defaults
+Chart.defaults.color = '#6b7685';
+Chart.defaults.font.family = "'IBM Plex Mono', monospace";
+Chart.defaults.font.size = 11;
+
+// ── File loading ───────────────────────────────────────────────────────────────
+document.getElementById('file-input').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (file) readFile(file);
+});
+
+const dz = document.getElementById('drop-zone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) readFile(file);
+});
+dz.addEventListener('click', () => document.getElementById('file-input').click());
+
+function readFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const json = JSON.parse(e.target.result);
+      loadData(json);
+    } catch(err) {
+      alert('Invalid JSON: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ── Process data ───────────────────────────────────────────────────────────────
+function processData(raw) {
+  const byBench = {};
+  for (const r of raw.results) {
+    if (!byBench[r.name]) byBench[r.name] = {};
+    byBench[r.name][r.language] = r;
+  }
+  return byBench;
+}
+
+function loadData(raw) {
+  DATA = processData(raw);
+  const ts = raw.timestamp ? new Date(raw.timestamp * 1000).toISOString().slice(0,10) : '—';
+  const runs = raw.runs_per_benchmark || '?';
+  document.getElementById('run-meta').textContent = `${ts} · ${runs} runs`;
+  document.getElementById('run-meta').style.display = '';
+  document.getElementById('drop-zone').style.display = 'none';
+  document.getElementById('main').style.display = 'block';
+  renderAll();
+}
+
+// ── Demo data (the actual run) ─────────────────────────────────────────────────
+function loadDemo() {
+  const demo = {
+    timestamp: 1779833849, runs_per_benchmark: 2,
+    results: [
+      {name:'fibonacci_iter', language:'go',     compile_s:8.474858, exec_mean_s:0.001088, exec_min_s:0.000955, exec_max_s:0.001221, total_s:8.475946, skipped:false},
+      {name:'fibonacci_iter', language:'cpp',    compile_s:0.356077, exec_mean_s:0.002729, exec_min_s:0.002625, exec_max_s:0.002834, total_s:0.358806, skipped:false},
+      {name:'fibonacci_iter', language:'python', compile_s:0,        exec_mean_s:0.013887, exec_min_s:0.013572, exec_max_s:0.014203, total_s:0.013887, skipped:false},
+      {name:'fibonacci_rec',  language:'go',     compile_s:0.147961, exec_mean_s:1.463849, exec_min_s:1.462645, exec_max_s:1.465054, total_s:1.611811, skipped:false},
+      {name:'fibonacci_rec',  language:'cpp',    compile_s:0.300205, exec_mean_s:0.457804, exec_min_s:0.455857, exec_max_s:0.459750, total_s:0.758008, skipped:false},
+      {name:'fibonacci_rec',  language:'python', compile_s:0,        exec_mean_s:28.822549,exec_min_s:28.47960, exec_max_s:29.16550, total_s:28.822549,skipped:false},
+      {name:'prime_sieve',    language:'go',     compile_s:0.156287, exec_mean_s:0.025204, exec_min_s:0.024735, exec_max_s:0.025674, total_s:0.181492, skipped:false},
+      {name:'prime_sieve',    language:'cpp',    compile_s:0.327557, exec_mean_s:0.026570, exec_min_s:0.026174, exec_max_s:0.026967, total_s:0.354127, skipped:false},
+      {name:'prime_sieve',    language:'python', compile_s:0,        exec_mean_s:0.061477, exec_min_s:0.061067, exec_max_s:0.061887, total_s:0.061477, skipped:false},
+      {name:'matrix_mul',     language:'go',     compile_s:0.147015, exec_mean_s:0.069585, exec_min_s:0.069116, exec_max_s:0.070055, total_s:0.216600, skipped:false},
+      {name:'matrix_mul',     language:'cpp',    compile_s:0.351228, exec_mean_s:0.037329, exec_min_s:0.036221, exec_max_s:0.038437, total_s:0.388556, skipped:false},
+      {name:'matrix_mul',     language:'python', compile_s:0,        exec_mean_s:6.879435, exec_min_s:6.688957, exec_max_s:7.069914, total_s:6.879435, skipped:false},
+      {name:'sort_ints',      language:'go',     compile_s:0.144840, exec_mean_s:1.006724, exec_min_s:1.005721, exec_max_s:1.007728, total_s:1.151564, skipped:false},
+      {name:'sort_ints',      language:'cpp',    compile_s:0.394837, exec_mean_s:0.830280, exec_min_s:0.828959, exec_max_s:0.831600, total_s:1.225117, skipped:false},
+      {name:'sort_ints',      language:'python', compile_s:0,        exec_mean_s:2.890641, exec_min_s:2.211455, exec_max_s:3.569827, total_s:2.890641, skipped:false},
+      {name:'json_roundtrip', language:'go',     compile_s:1.029985, exec_mean_s:0.550370, exec_min_s:0.548874, exec_max_s:0.551865, total_s:1.580355, skipped:false},
+      {name:'json_roundtrip', language:'cpp',    compile_s:0.425256, exec_mean_s:0.150377, exec_min_s:0.149323, exec_max_s:0.151431, total_s:0.575633, skipped:false},
+      {name:'json_roundtrip', language:'python', compile_s:0,        exec_mean_s:0.762799, exec_min_s:0.756311, exec_max_s:0.769286, total_s:0.762799, skipped:false},
+      {name:'string_build',   language:'go',     compile_s:0.146499, exec_mean_s:0.067314, exec_min_s:0.066780, exec_max_s:0.067848, total_s:0.213813, skipped:false},
+      {name:'string_build',   language:'cpp',    compile_s:0.296533, exec_mean_s:0.014244, exec_min_s:0.013569, exec_max_s:0.014920, total_s:0.310777, skipped:false},
+      {name:'string_build',   language:'python', compile_s:0,        exec_mean_s:0.103243, exec_min_s:0.101246, exec_max_s:0.105241, total_s:0.103243, skipped:false},
+      {name:'hashmap',        language:'go',     compile_s:0.143036, exec_mean_s:0.231401, exec_min_s:0.225926, exec_max_s:0.236876, total_s:0.374437, skipped:false},
+      {name:'hashmap',        language:'cpp',    compile_s:0.376847, exec_mean_s:0.107907, exec_min_s:0.103604, exec_max_s:0.112211, total_s:0.484755, skipped:false},
+      {name:'hashmap',        language:'python', compile_s:0,        exec_mean_s:0.354379, exec_min_s:0.353512, exec_max_s:0.355245, total_s:0.354379, skipped:false},
+      {name:'file_io',        language:'go',     compile_s:0.241723, exec_mean_s:0.050378, exec_min_s:0.050316, exec_max_s:0.050440, total_s:0.292101, skipped:false},
+      {name:'file_io',        language:'cpp',    compile_s:0.311593, exec_mean_s:0.070030, exec_min_s:0.069909, exec_max_s:0.070151, total_s:0.381623, skipped:false},
+      {name:'file_io',        language:'python', compile_s:0,        exec_mean_s:0.229693, exec_min_s:0.224781, exec_max_s:0.234604, total_s:0.229693, skipped:false},
+      {name:'concurrency',    language:'go',     compile_s:0.148977, exec_mean_s:0.008601, exec_min_s:0.008044, exec_max_s:0.009158, total_s:0.157578, skipped:false},
+      {name:'concurrency',    language:'cpp',    compile_s:0.435122, exec_mean_s:0.067801, exec_min_s:0.046849, exec_max_s:0.088752, total_s:0.502923, skipped:false},
+      {name:'concurrency',    language:'python', compile_s:0,        exec_mean_s:0.486714, exec_min_s:0.484999, exec_max_s:0.488429, total_s:0.486714, skipped:false},
+    ]
+  };
+  loadData(demo);
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────────
+function renderAll() {
+  renderSummary();
+  renderOverview();
+  renderGrid();
+  renderTable();
+}
+
+function fmtTime(s) {
+  if (s == null || s < 0) return '—';
+  if (s < 0.001)  return (s * 1000).toFixed(3) + ' ms';
+  if (s < 1)      return (s * 1000).toFixed(1) + ' ms';
+  return s.toFixed(3) + ' s';
+}
+
+function winner(bench) {
+  const langs = ['go','cpp','python'];
+  let best = null, bestT = Infinity;
+  for (const l of langs) {
+    const r = DATA[bench]?.[l];
+    if (!r || r.skipped) continue;
+    if (r.exec_mean_s < bestT) { bestT = r.exec_mean_s; best = l; }
+  }
+  return best;
+}
+
+function renderSummary() {
+  const benches = Object.keys(DATA);
+  const totals = { go:0, cpp:0, python:0 };
+  let goWins = 0, cppWins = 0, pyWins = 0;
+  for (const b of benches) {
+    for (const l of ['go','cpp','python']) {
+      const r = DATA[b]?.[l];
+      if (r && !r.skipped) totals[l] += r.exec_mean_s;
+    }
+    const w = winner(b);
+    if (w === 'go') goWins++;
+    else if (w === 'cpp') cppWins++;
+    else pyWins++;
+  }
+  const pyT = totals.python;
+  const cells = [
+    { label:'go total exec',   value: fmtTime(totals.go),     cls:'go'  },
+    { label:'c++ total exec',  value: fmtTime(totals.cpp),    cls:'cpp' },
+    { label:'python total exec', value: fmtTime(totals.python), cls:'py' },
+    { label:'go avg speedup',  value: (pyT/totals.go).toFixed(1)+'×',  cls:'go' },
+    { label:'c++ avg speedup', value: (pyT/totals.cpp).toFixed(1)+'×', cls:'cpp' },
+    { label:'benchmarks',      value: benches.length,          cls:'neutral' },
+  ];
+  document.getElementById('summary-strip').innerHTML = cells.map(c =>
+    `<div class="stat-cell"><div class="label">${c.label}</div><div class="value ${c.cls}">${c.value}</div></div>`
+  ).join('');
+}
+
+function getOverviewDatasets() {
+  const benches = Object.keys(DATA);
+  return ['go','cpp','python'].map(lang => ({
+    label: lang === 'python' ? 'Python' : lang === 'cpp' ? 'C++' : 'Go',
+    data: benches.map(b => {
+      const r = DATA[b]?.[lang];
+      if (!r || r.skipped) return 0;
+      return parseFloat((r[metric] || 0).toFixed(6));
+    }),
+    backgroundColor: LANG_COLOR[lang] + '80',
+    borderColor: LANG_COLOR[lang],
+    borderWidth: 1,
+    borderRadius: 3,
+    borderSkipped: false,
+  }));
+}
+
+function renderOverview() {
+  if (overviewChart) overviewChart.destroy();
+  const benches = Object.keys(DATA);
+  const ctx = document.getElementById('overview-chart');
+  overviewChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: benches.map(b => b.replace(/_/g,' ')),
+      datasets: getOverviewDatasets()
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { position: 'top', labels: { boxWidth: 10, padding: 16, font: { size: 11 } } },
+        tooltip: {
+          callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtTime(ctx.raw)}` }
+        }
+      },
+      scales: {
+        x: { ticks: { maxRotation: 25 }, grid: { color: '#1e232940' } },
+        y: {
+          type: scaleType,
+          title: { display: true, text: 'seconds', font: { size: 11 } },
+          grid: { color: '#1e232980' },
+          ticks: { callback: v => fmtTime(v) }
+        }
+      }
+    }
+  });
+}
+
+function renderGrid() {
+  const grid = document.getElementById('bench-grid');
+  grid.innerHTML = '';
+  const benches = Object.keys(DATA);
+  benches.forEach((b, idx) => {
+    const card = document.createElement('div');
+    card.className = 'bench-card';
+    card.style.animationDelay = (idx * 30) + 'ms';
+    const w = winner(b);
+    const cat = CATEGORIES[b] || 'misc';
+    card.innerHTML = `
+      <div class="bench-card-header">
+        <span class="bench-name">${b.replace(/_/g, '_\u200b')}</span>
+        <span class="bench-category">${cat}</span>
+        ${w ? `<span class="winner-badge ${w}">${w === 'python' ? 'py' : w} fastest</span>` : ''}
+      </div>
+      <div class="bench-canvas-wrap"><canvas id="mini-${b}"></canvas></div>
+      <div class="bench-stats">
+        ${['go','cpp','python'].map(l => {
+          const r = DATA[b]?.[l];
+          const v = r && !r.skipped ? fmtTime(r.exec_mean_s) : '—';
+          const py = DATA[b]?.python;
+          const speedup = (l !== 'python' && r && !r.skipped && py && !py.skipped && r.exec_mean_s > 0)
+            ? (py.exec_mean_s / r.exec_mean_s).toFixed(1) + '×'
+            : '';
+          return `<div class="bstat ${l}">
+            <div class="bl">${l === 'python' ? 'python' : l === 'cpp' ? 'c++' : 'go'}</div>
+            <div class="bv">${v}</div>
+            ${speedup ? `<div class="bs">${speedup} faster</div>` : '<div class="bs">&nbsp;</div>'}
+          </div>`;
+        }).join('')}
+      </div>`;
+    grid.appendChild(card);
+
+    // mini chart
+    const langs = ['go','cpp','python'];
+    const ctx = card.querySelector(`#mini-${b}`);
+    if (miniCharts[b]) miniCharts[b].destroy();
+    miniCharts[b] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Go','C++','Python'],
+        datasets: [{
+          data: langs.map(l => {
+            const r = DATA[b]?.[l];
+            return (r && !r.skipped) ? parseFloat((r.exec_mean_s || 0).toFixed(6)) : 0;
+          }),
+          backgroundColor: langs.map(l => LANG_COLOR[l] + '70'),
+          borderColor:      langs.map(l => LANG_COLOR[l]),
+          borderWidth: 1,
+          borderRadius: 3,
+          borderSkipped: false,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: {
+          callbacks: { label: ctx => ` ${fmtTime(ctx.raw)}` }
+        }},
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+          y: {
+            type: scaleType,
+            grid: { color: '#1e232980' },
+            ticks: { callback: v => fmtTime(v), font: { size: 10 } }
+          }
+        }
+      }
+    });
+  });
+}
+
+function renderTable() {
+  const tbody = document.getElementById('table-body');
+  const benches = Object.keys(DATA);
+  tbody.innerHTML = benches.map(b => {
+    const go  = DATA[b]?.go;
+    const cpp = DATA[b]?.cpp;
+    const py  = DATA[b]?.python;
+    const pyT = py && !py.skipped ? py.exec_mean_s : null;
+    const goT = go && !go.skipped ? go.exec_mean_s : null;
+    const cppT = cpp && !cpp.skipped ? cpp.exec_mean_s : null;
+
+    const goSpeedup  = (pyT && goT)  ? pyT / goT  : null;
+    const cppSpeedup = (pyT && cppT) ? pyT / cppT : null;
+
+    function speedupClass(v) {
+      if (!v) return 'td-skip';
+      if (v >= 10) return 'td-speedup fast';
+      if (v >= 2)  return 'td-speedup med';
+      if (v < 1)   return 'td-speedup slow';
+      return 'td-speedup';
+    }
+
+    const w = winner(b);
+    return `<tr>
+      <td class="td-bench">${b}</td>
+      <td class="td-py">${pyT ? fmtTime(pyT) : '<span class="td-skip">skip</span>'}</td>
+      <td class="td-go">${goT ? fmtTime(goT) : '<span class="td-skip">skip</span>'}</td>
+      <td class="td-cpp">${cppT ? fmtTime(cppT) : '<span class="td-skip">skip</span>'}</td>
+      <td class="${speedupClass(goSpeedup)}">${goSpeedup ? goSpeedup.toFixed(1)+'×' : '—'}</td>
+      <td class="${speedupClass(cppSpeedup)}">${cppSpeedup ? cppSpeedup.toFixed(1)+'×' : '—'}</td>
+      <td class="td-${w || ''}">${w || '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Controls ───────────────────────────────────────────────────────────────────
+function setMetric(btn, m) {
+  metric = m;
+  document.querySelectorAll('[data-metric]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (!DATA) return;
+  renderOverview();
+  renderGrid();
+}
+
+function setScale(btn, s) {
+  scaleType = s;
+  document.querySelectorAll('.ctrl-btn').forEach(b => {
+    if (b.getAttribute('onclick')?.includes('setScale')) b.classList.remove('active');
+  });
+  btn.classList.add('active');
+  if (!DATA) return;
+  renderOverview();
+  renderGrid();
+}
+</script>
+</body>
+</html>

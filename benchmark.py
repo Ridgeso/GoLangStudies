@@ -222,6 +222,7 @@ def pars_args():
     parser.add_argument("--no-python", action="store_true",   help="skip Python")
     parser.add_argument("--output",    type=str, default="",  help="path to write JSON results (default: results/run_<timestamp>.json)")
     parser.add_argument("--cpp-compiler", type=str, default="",  help="path to C++ compiler (default: g++)")
+    parser.add_argument("--go-compiler", type=str, default="",  help="path to Go compiler (default: go)")
     return parser.parse_args()
 
 def main():
@@ -233,6 +234,9 @@ def main():
     languages = []
     if not args.no_go:
         languages.append("go")
+        if args.go_compiler:
+            global GO_BIN
+            GO_BIN = args.go_compiler
     if not args.no_cpp:
         languages.append("cpp")
         if args.cpp_compiler:
