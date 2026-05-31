@@ -31,9 +31,11 @@ ROOT      = Path(__file__).parent
 SRC       = ROOT / "tests"
 GO_NAME   = "goSrc.go"
 CPP_NAME  = "cppSrc.cpp"
-PY_NAME   = "pySrc.py"
+PY_NAME   = "pythonSrc.py"
 RESULTS   = ROOT / "results"
 BUILD_DIR = ROOT / "build"
+CPP_BIN   = shutil.which("g++") or "/usr/bin/g++"
+GO_BIN    = shutil.which("go") or "/usr/lib/go/bin/go"
 
 
 @dataclass
@@ -58,9 +60,6 @@ class BenchmarkResult:
     error: str                 = ""
     skipped: bool              = False
     skip_reason: str           = ""
-
-
-GO_BIN = shutil.which("go") or "/usr/lib/go/bin/go"
 
 
 def _run(cmd: list[str], timeout: int, cwd: Optional[Path] = None) -> RunResult:
@@ -89,7 +88,7 @@ def _compile_go(src: Path, out: Path, timeout: int) -> tuple[bool, float, str]:
 
 
 def _compile_cpp(src: Path, out: Path, timeout: int) -> tuple[bool, float, str]:
-    r = _run(["g++", "-O2", "-std=c++17", "-pthread", "-o", str(out), str(src)], timeout)
+    r = _run([CPP_BIN, "-O2", "-std=c++17", "-pthread", "-o", str(out), str(src)], timeout)
     return r.exit_code == 0, r.wall_seconds, r.stderr
 
 
@@ -109,6 +108,8 @@ def run_benchmark(
             res.skipped, res.skip_reason = True, f"source not found: {src}"
             return res
         binary = BUILD_DIR / f"{name}_go"
+        if os.name == "nt":
+            binary = binary.with_suffix(".exe")
         ok, ctime, cerr = _compile_go(src, binary, timeout)
         res.compile_s = ctime
         if not ok:
@@ -121,6 +122,8 @@ def run_benchmark(
             res.skipped, res.skip_reason = True, f"source not found: {src}"
             return res
         binary = BUILD_DIR / f"{name}_cpp"
+        if os.name == "nt":
+            binary = binary.with_suffix(".exe")
         ok, ctime, cerr = _compile_cpp(src, binary, timeout)
         res.compile_s = ctime
         if not ok:
@@ -209,8 +212,7 @@ def print_result(r: BenchmarkResult):
           f"exec_min={_color_time(r.exec_min_s)}  "
           f"total={_color_time(r.total_s)}")
 
-
-def main():
+def pars_args():
     parser = argparse.ArgumentParser(description="Multi-language benchmark runner")
     parser.add_argument("--runs",      type=int, default=3,   help="exec runs per benchmark (default 3)")
     parser.add_argument("--timeout",   type=int, default=180, help="per-run timeout seconds (default 180)")
@@ -219,7 +221,11 @@ def main():
     parser.add_argument("--no-cpp",    action="store_true",   help="skip C++")
     parser.add_argument("--no-python", action="store_true",   help="skip Python")
     parser.add_argument("--output",    type=str, default="",  help="path to write JSON results (default: results/run_<timestamp>.json)")
-    args = parser.parse_args()
+    parser.add_argument("--cpp-compiler", type=str, default="",  help="path to C++ compiler (default: g++)")
+    return parser.parse_args()
+
+def main():
+    args = pars_args()
 
     BUILD_DIR.mkdir(parents=True, exist_ok=True)
     RESULTS.mkdir(parents=True, exist_ok=True)
@@ -229,6 +235,9 @@ def main():
         languages.append("go")
     if not args.no_cpp:
         languages.append("cpp")
+        if args.cpp_compiler:
+            global CPP_BIN
+            CPP_BIN = args.cpp_compiler
     if not args.no_python:
         languages.append("python")
 

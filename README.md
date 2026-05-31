@@ -39,8 +39,8 @@ python3 benchmark.py --output out.json # custom results path
 
 ```
 benchmarks/
-├── benchmark.py         # runner — the only script you need
-├── tests/               # sources of test examples
+┌── benchmark.py         # runner — the only script you need
+└── tests/               # sources of test examples
     ├── concurrency/     #
     ├── fibonacci/       #
     ├── fibRecursive/    #
@@ -51,17 +51,10 @@ benchmarks/
     ├── primeSieve/      #
     ├── sorting/         #
     ├── stringBuilder/   #
-├── build/               # compiled binaries (auto-created)
+┌── build/               # compiled binaries (auto-created)
 └── results/             # JSON output per run (auto-created)
 ```
 
 ## Results
 
 Each run saves a JSON file to `results/`. Times reported: compile, execution (mean/min/max), and total.
-
-## Key findings (from real run)
-
-- Matrix multiply: Go ~99× faster than Python, C++ ~184×
-- Concurrency: Go goroutines ~57× faster than Python threads (GIL)
-- File I/O and sorting: much closer, Go ~3–5×
-- Go compiles in ~0.15s per file; C++ ~0.30–0.44s

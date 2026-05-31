@@ -1,2 +1,7 @@
 # bin
 build/**
+results/**
+
+# ide
+.idea/
+.vscode/
