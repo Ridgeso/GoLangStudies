@@ -1,7 +1,7 @@
 package main
 //unsafe.Pointer oraz wyłączony GC
 import (
-	json "github.com/goccy/go-json" //korzysta z unsafe.Pointer
+	json "github.com/goccy/go-json" //korzysta z unsafe.Pointer -> wspomnieć na prezentacji o tym
 	"fmt"
 	"strconv"
 	"runtime/debug"
