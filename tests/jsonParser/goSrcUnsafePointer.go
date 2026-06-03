@@ -1,7 +1,7 @@
 package main
-
+//unsafe.Pointer oraz wyłączony GC
 import (
-	"encoding/json"
+	json "github.com/goccy/go-json" //korzysta z unsafe.Pointer
 	"fmt"
 	"strconv"
 	"runtime/debug"
@@ -15,6 +15,7 @@ type Item struct {
 }
 
 func main() {
+    debug.SetGCPercent(-1)
     var tags = []string{"alpha", "beta", "gamma"}
 	const N = 200_000
 	items := make([]Item, N)
