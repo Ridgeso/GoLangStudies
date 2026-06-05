@@ -310,6 +310,23 @@
   .td-speedup.med  { color: var(--py); }
   .td-skip { color: var(--border2); }
 
+  /* ── FILTER INPUT ── */
+  #filter-input {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 5px 10px;
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--text);
+    border-radius: 4px;
+    outline: none;
+    width: 180px;
+    margin-left: 8px;
+    transition: border-color .15s;
+  }
+  #filter-input::placeholder { color: var(--muted); }
+  #filter-input:focus { border-color: var(--accent); }
+
   /* ── SCROLLBAR ── */
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
@@ -416,6 +433,7 @@
 let DATA = null;
 let metric = 'exec_mean_s';
 let scaleType = 'linear';
+let filterQuery = '';
 let overviewChart = null;
 const miniCharts = {};
 
@@ -598,8 +616,13 @@ function renderSummary() {
   ).join('');
 }
 
+function filteredBenches() {
+  const q = filterQuery.trim().toLowerCase();
+  return Object.keys(DATA).filter(b => !q || b.toLowerCase().includes(q));
+}
+
 function getOverviewDatasets() {
-  const benches = Object.keys(DATA);
+  const benches = filteredBenches();
   return ['go','cpp','python'].map(lang => ({
     label: lang === 'python' ? 'Python' : lang === 'cpp' ? 'C++' : 'Go',
     data: benches.map(b => {
@@ -617,7 +640,7 @@ function getOverviewDatasets() {
 
 function renderOverview() {
   if (overviewChart) overviewChart.destroy();
-  const benches = Object.keys(DATA);
+  const benches = filteredBenches();
   const ctx = document.getElementById('overview-chart');
   overviewChart = new Chart(ctx, {
     type: 'bar',
@@ -650,7 +673,7 @@ function renderOverview() {
 function renderGrid() {
   const grid = document.getElementById('bench-grid');
   grid.innerHTML = '';
-  const benches = Object.keys(DATA);
+  const benches = filteredBenches();
   benches.forEach((b, idx) => {
     const card = document.createElement('div');
     card.className = 'bench-card';
@@ -721,7 +744,7 @@ function renderGrid() {
 
 function renderTable() {
   const tbody = document.getElementById('table-body');
-  const benches = Object.keys(DATA);
+  const benches = filteredBenches();
   tbody.innerHTML = benches.map(b => {
     const go  = DATA[b]?.go;
     const cpp = DATA[b]?.cpp;
@@ -786,8 +809,14 @@ function setScale(btn, s) {
   renderGrid();
 }
 
-document.getElementById('filter-input').addEventListener("filterInput", e => {
-  console.log(e.target.value);
+document.getElementById('filter-input').addEventListener('input', e => {
+  filterQuery = e.target.value;
+  if (!DATA) {
+    return;
+  }
+  renderOverview();
+  renderGrid();
+  renderTable();
 });
 </script>
 </body>
