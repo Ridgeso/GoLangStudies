@@ -253,7 +253,7 @@
   .bench-canvas-wrap { position: relative; height: 120px; }
   .bench-stats {
     display: grid;
-    grid-template-columns: repeat(3,1fr);
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
     gap: 4px;
     margin-top: 12px;
   }
@@ -268,6 +268,15 @@
   .bstat.go      .bl { color: var(--go); }
   .bstat.cpp     .bl { color: var(--cpp); }
   .bstat.python  .bl { color: var(--python); }
+  /* palette-indexed colours for internal (variant) mode */
+  .bstat[data-ci="0"] .bl { color: #00acd7; }
+  .bstat[data-ci="1"] .bl { color: #f97316; }
+  .bstat[data-ci="2"] .bl { color: #a78bfa; }
+  .bstat[data-ci="3"] .bl { color: #34d399; }
+  .bstat[data-ci="4"] .bl { color: #fb7185; }
+  .bstat[data-ci="5"] .bl { color: #facc15; }
+  .bstat[data-ci="6"] .bl { color: #38bdf8; }
+  .bstat[data-ci="7"] .bl { color: #4ade80; }
 
   /* ── SPEEDUP TABLE ── */
   .table-section { padding: 0 28px 28px; }
@@ -386,9 +395,10 @@
         <button class="ctrl-btn" onclick="setScale(this,'logarithmic')">log</button>
       </div>
       <div class="divider"></div>
-      <span class="ctrl-label">Show Tests:</span>
+      <span class="ctrl-label">view</span>
       <div class="btn-group">
-        <button class="ctrl-btn" id="switch-tests" onclick="switchInternal(this)">Internal</button>
+        <button class="ctrl-btn active" id="btn-multi"   onclick="setView(this,'multi')">multi-lang</button>
+        <button class="ctrl-btn"        id="btn-internal" onclick="setView(this,'internal')">go variants</button>
       </div>
     </div>
     <div>
@@ -413,20 +423,10 @@
 
   <!-- Speedup table -->
   <div class="table-section">
-    <div class="section-title">speedup table — execution time vs Python</div>
+    <div class="section-title" id="table-title">speedup table — execution time vs Python</div>
     <div class="table-wrap">
       <table>
-        <thead>
-          <tr>
-            <th>benchmark</th>
-            <th style="color:var(--python)">python</th>
-            <th style="color:var(--go)">go</th>
-            <th style="color:var(--cpp)">c++</th>
-            <th>go speedup</th>
-            <th>c++ speedup</th>
-            <th>winner</th>
-          </tr>
-        </thead>
+        <thead id="table-head"></thead>
         <tbody id="table-body"></tbody>
       </table>
     </div>
@@ -439,12 +439,34 @@ let DATA = null;
 let metric = 'exec_mean_s';
 let scaleType = 'linear';
 let filterQuery = '';
-let showInternal = false;
+let viewMode = 'multi';
 let overviewChart = null;
 const miniCharts = {};
 
-const LANG_COLOR = { go: '#00acd7', "c++": '#659ad2', python: '#ffd43b' };
-const LANG_DIM   = { go: '#00acd740', "c++": '#659ad240', python: '#ffd43b40' };
+const LANG_COLOR = { go: '#00acd7', 'c++': '#659ad2', python: '#ffd43b' };
+
+const PALETTE = ['#00acd7', '#f97316', '#a78bfa', '#34d399', '#fb7185', '#facc15', '#38bdf8', '#4ade80'];
+
+const _paletteCache = {};
+function paletteColor(benchName, testName, alpha) {
+  const key = benchName + '|' + testName;
+  if (_paletteCache[key] === undefined) {
+    const siblings = DATA[benchName].results.map(r => r.test_name);
+    _paletteCache[key] = siblings.indexOf(testName) % PALETTE.length;
+  }
+  const hex = PALETTE[_paletteCache[key]];
+  return alpha ? hex + alpha : hex;
+}
+
+function colorFor(benchName, r, alpha) {
+  if (viewMode === 'internal') return paletteColor(benchName, r.test_name, alpha);
+  return alpha ? (LANG_COLOR[r.language] || '#888888') + alpha
+               : (LANG_COLOR[r.language] || '#888888');
+}
+
+function labelFor(r) {
+  return viewMode === 'internal' ? r.test_name : r.language;
+}
 
 // Chart.js global defaults
 Chart.defaults.color = '#6b7685';
@@ -487,8 +509,8 @@ function readFile(file) {
 // ── Process data ───────────────────────────────────────────────────────────────
 function processData(raw) {
   const byBench = {};
-  for (const r of raw.benchmarks) {
-    byBench[r.name] = r;
+  for (const b of raw.benchmarks) {
+    byBench[b.name] = b;
   }
   return byBench;
 }
@@ -627,6 +649,7 @@ function loadDemo() {
 
 // ── Render ─────────────────────────────────────────────────────────────────────
 function renderAll() {
+  Object.keys(_paletteCache).forEach(k => delete _paletteCache[k]);
   renderSummary();
   renderOverview();
   renderGrid();
@@ -646,76 +669,114 @@ function fmtTime(s) {
   return s.toFixed(3) + ' s';
 }
 
-function winner(bench) {
+function winner(benchName) {
   let best = null, bestT = Infinity;
-  for (const r of DATA[bench].results) {
+  for (const r of DATA[benchName].results) {
     if (r.skipped) {
       continue;
     }
     if (r.exec_mean_s < bestT) {
       bestT = r.exec_mean_s;
-      best = r.language;
+      best = r;
     }
   }
   return best;
 }
 
+function filteredBenches() {
+  const q = filterQuery.trim().toLowerCase();
+  const isInternal = viewMode === 'internal';
+  return Object.keys(DATA).filter(b => {
+    if (DATA[b].internal !== isInternal) {
+      return false;
+    }
+    return !q || b.toLowerCase().includes(q);
+  });
+}
+
+// ── Summary strip ──────────────────────────────────────────────────────────────
 function renderSummary() {
-  const benches = Object.keys(DATA);
-  const totals = { go:0, "c++":0, python:0 };
-  let goWins = 0, cppWins = 0, pyWins = 0;
+  const benches = filteredBenches();
+  const strip = document.getElementById('summary-strip');
+
+  if (viewMode === 'internal') {
+    const cells = benches.map(b => {
+      const w = winner(b);
+      const ci = w ? DATA[b].results.indexOf(w) % PALETTE.length : 0;
+      const color = w ? PALETTE[ci] : '#6b7685';
+      return `<div class="stat-cell">
+        <div class="label">${b.replace(/_/g,' ')}</div>
+        <div class="value" style="color:${color};font-size:16px">${w ? w.test_name : '—'} <span style="font-size:13px;color:var(--muted)">${w ? fmtTime(w.exec_mean_s) : ''}</span></div>
+      </div>`;
+    });
+    strip.innerHTML = cells.join('') ||
+      `<div class="stat-cell"><div class="label">no variant benchmarks loaded</div></div>`;
+    return;
+  }
+
+  const totals = {};
   for (const b of benches) {
     for (const r of DATA[b].results) {
       if (!r.skipped) {
-        totals[r.language] += r.exec_mean_s;
+        totals[r.language] = (totals[r.language] || 0) + r.exec_mean_s;
       }
     }
-    const w = winner(b);
-    if (w === 'go') {
-      goWins++;
-    }
-    else if (w === 'c++') {
-      cppWins++;
-    }
-    else pyWins++;
   }
-  const pyT = totals.python;
+  const pyT = totals['python'] || 0;
+  const goT = totals['go']     || 0;
+  const cppT= totals['c++']    || 0;
   const cells = [
-    { label:'go total exec',     value: fmtTime(totals.go),              cls:'go'  },
-    { label:'c++ total exec',    value: fmtTime(totals["c++"]),             cls:'cpp' },
-    { label:'python total exec', value: fmtTime(totals.python),          cls:'python' },
-    { label:'go avg speedup',    value: (pyT/totals.go).toFixed(1)+'×',  cls:'go' },
-    { label:'c++ avg speedup',   value: (pyT/totals["c++"]).toFixed(1)+'×', cls:'cpp' },
-    { label:'benchmarks',        value: benches.length,                  cls:'neutral' },
+    { label:'go total exec',     value: fmtTime(goT),                           cls:'go'     },
+    { label:'c++ total exec',    value: fmtTime(cppT),                          cls:'cpp'    },
+    { label:'python total exec', value: fmtTime(pyT),                           cls:'python' },
+    { label:'go avg speedup',    value: goT  ? (pyT/goT ).toFixed(1)+'×' : '—', cls:'go'     },
+    { label:'c++ avg speedup',   value: cppT ? (pyT/cppT).toFixed(1)+'×' : '—', cls:'cpp'    },
+    { label:'benchmarks',        value: benches.length,                         cls:'neutral'},
   ];
-  document.getElementById('summary-strip').innerHTML = cells.map(c =>
+  strip.innerHTML = cells.map(c =>
     `<div class="stat-cell"><div class="label">${c.label}</div><div class="value ${c.cls}">${c.value}</div></div>`
   ).join('');
 }
 
-function filteredBenches() {
-  const q = filterQuery.trim().toLowerCase();
-  const f = b => {
-    const filterByText = !q || b.toLowerCase().includes(q);
-    const filterByInternal = DATA[b].internal === showInternal;
-    return filterByText && filterByInternal
-  }
-  return Object.keys(DATA).filter(f);
-}
-
+// ── Overview chart ─────────────────────────────────────────────────────────────
 function getOverviewDatasets() {
   const benches = filteredBenches();
-  return ['go','c++','python'].map(lang => ({
+
+  if (viewMode === 'internal') {
+    const nameSet = new Map();
+    for (const b of benches) {
+      DATA[b].results.forEach((r, i) => {
+        if (!nameSet.has(r.test_name)) {
+          nameSet.set(r.test_name, nameSet.size);
+        }
+      });
+    }
+    return Array.from(nameSet.entries()).map(([tname, idx]) => {
+      const color = PALETTE[idx % PALETTE.length];
+      return {
+        label: tname,
+        data: benches.map(b => {
+          const r = DATA[b].results.find(x => x.test_name === tname);
+          return r && !r.skipped ? parseFloat((r[metric] || 0).toFixed(6)) : 0;
+        }),
+        backgroundColor: color + '80',
+        borderColor: color,
+        borderWidth: 1,
+        borderRadius: 3,
+        borderSkipped: false,
+      };
+    });
+  }
+
+  const langs = ['go', 'c++', 'python'];
+  return langs.map(lang => ({
     label: lang === 'python' ? 'Python' : lang === 'c++' ? 'C++' : 'Go',
     data: benches.map(b => {
-      const r = DATA[b].results.find(elem => elem.language === lang);
-      if (!r || r.skipped) {
-        return 0;
-      }
-      return parseFloat((r[metric] || 0).toFixed(6));
+      const r = DATA[b].results.find(x => x.language === lang);
+      return r && !r.skipped ? parseFloat((r[metric] || 0).toFixed(6)) : 0;
     }),
-    backgroundColor: LANG_COLOR[lang] + '80',
-    borderColor: LANG_COLOR[lang],
+    backgroundColor: (LANG_COLOR[lang] || '#888') + '80',
+    borderColor: LANG_COLOR[lang] || '#888',
     borderWidth: 1,
     borderRadius: 3,
     borderSkipped: false,
@@ -732,7 +793,7 @@ function renderOverview() {
     type: 'bar',
     data: {
       labels: benches.map(b => b.replace(/_/g,' ')),
-      datasets: getOverviewDatasets()
+      datasets: getOverviewDatasets(),
     },
     options: {
       responsive: true,
@@ -740,8 +801,8 @@ function renderOverview() {
       plugins: {
         legend: { position: 'top', labels: { boxWidth: 10, padding: 16, font: { size: 11 } } },
         tooltip: {
-          callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtTime(ctx.raw)}` }
-        }
+          callbacks: { label: c => ` ${c.dataset.label}: ${fmtTime(c.raw)}` }
+        },
       },
       scales: {
         x: { ticks: { maxRotation: 25 }, grid: { color: '#1e232940' } },
@@ -749,97 +810,148 @@ function renderOverview() {
           type: scaleType,
           title: { display: true, text: 'seconds', font: { size: 11 } },
           grid: { color: '#1e232980' },
-          ticks: { callback: v => fmtTime(v) }
-        }
-      }
-    }
+          ticks: { callback: v => fmtTime(v) },
+        },
+      },
+    },
   });
 }
 
+// ── Per-benchmark grid ─────────────────────────────────────────────────────────
 function renderGrid() {
   const grid = document.getElementById('bench-grid');
   grid.innerHTML = '';
   const benches = filteredBenches();
   benches.forEach((b, idx) => {
-    results = DATA[b].results;
+    const results  = DATA[b].results;
+    const cat      = DATA[b].category || 'misc';
+    const w        = winner(b);
+    const wLabel   = w ? labelFor(w) : null;
+    const wColor   = w ? colorFor(b, w) : null;
+    const wBadge   = wLabel
+      ? `<span class="winner-badge" style="background:${wColor}15;color:${wColor};border:1px solid ${wColor}50">${wLabel} fastest</span>`
+      : '';
+
+    const statsHtml = results.map((r, ri) => {
+      const v  = !r.skipped ? fmtTime(r.exec_mean_s) : '—';
+      const lbl = labelFor(r);
+      const col = colorFor(b, r);
+      const ci  = DATA[b].results.indexOf(r) % PALETTE.length;
+
+      let speedupHtml = '<div class="bs">&nbsp;</div>';
+      if (!r.skipped) {
+        const reduceBigger = (a, x) => x.exec_mean_s > a.exec_mean_s ? x : a;
+        const baseline = viewMode === 'internal'
+          ? results.filter(x => !x.skipped).reduce(reduceBigger, results.find(x => !x.skipped))
+          : results.find(x => x.language === 'python');
+        if (baseline && !baseline.skipped && r.test_name !== baseline.test_name && baseline.exec_mean_s > 0) {
+          const ratio = baseline.exec_mean_s / r.exec_mean_s;
+          speedupHtml = `<div class="bs">${ratio.toFixed(1)}× ${ratio >= 1 ? 'faster' : 'slower'}</div>`;
+        }
+      }
+
+      const extraAttr = viewMode === 'internal' ? `data-ci="${ci}"` : `class="bstat ${r.language === 'c++' ? 'cpp' : r.language}"`;
+      return `<div class="bstat" ${extraAttr} style="background:var(--bg)">
+        <div class="bl" style="color:${col}">${lbl}</div>
+        <div class="bv">${v}</div>
+        ${speedupHtml}
+      </div>`;
+    }).join('');
+
     const card = document.createElement('div');
     card.className = 'bench-card';
     card.style.animationDelay = (idx * 30) + 'ms';
-    const w = winner(b);
-    const cat = DATA[b].category || 'misc';
     card.innerHTML = `
       <div class="bench-card-header">
-        <span class="bench-name">${b.replace(/_/g, '_\u200b')}</span>
+        <span class="bench-name">${b.replace(/_/g,'_\u200b')}</span>
         <span class="bench-category">${cat}</span>
-        ${w ? `<span class="winner-badge ${w === "c++" ? "cpp" : w}">${w} fastest</span>` : ''}
+        ${wBadge}
       </div>
       <div class="bench-canvas-wrap"><canvas id="mini-${b}"></canvas></div>
-      <div class="bench-stats">
-        ${results.map(r => {
-          const v = r && !r.skipped ? fmtTime(r.exec_mean_s) : '—';
-          const py = results.find(elem => elem.language === "python")
-          const speedup = (r.language !== 'python' && !r.skipped && py && !py.skipped && r.exec_mean_s > 0)
-            ? (py.exec_mean_s / r.exec_mean_s).toFixed(1)
-            : -1.0;
-          return `<div class="bstat ${r.language === "c++" ? "cpp" : r.language}">
-            <div class="bl">${r.language}</div>
-            <div class="bv">${v}</div>
-            ${speedup < 0.0 ? `<div class="bs">${speedup + '×'} ${speedup < 1.0 ? "slower" : "faster"}</div>` : '<div class="bs">&nbsp;</div>'}
-          </div>`;
-        }).join('')}
-      </div>`;
+      <div class="bench-stats">${statsHtml}</div>`;
     grid.appendChild(card);
 
-    // mini chart
+    // Mini bar chart
     const ctx = card.querySelector(`#mini-${b}`);
     if (miniCharts[b]) miniCharts[b].destroy();
     miniCharts[b] = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: ['Go','C++','Python'],
+        labels: results.map(r => labelFor(r)),
         datasets: [{
-          data: results.map(r => {
-            return (r && !r.skipped) ? parseFloat((r.exec_mean_s || 0).toFixed(6)) : 0;
-          }),
-          backgroundColor: results.map(r => LANG_COLOR[r.language] + '70'),
-          borderColor:     results.map(r => LANG_COLOR[r.language]),
-          borderWidth: 1,
-          borderRadius: 3,
-          borderSkipped: false,
-        }]
+          data: results.map(r => r.skipped ? 0 : parseFloat((r.exec_mean_s||0).toFixed(6))),
+          backgroundColor: results.map(r => colorFor(b, r, '70')),
+          borderColor:     results.map(r => colorFor(b, r)),
+          borderWidth: 1, borderRadius: 3, borderSkipped: false,
+        }],
       },
       options: {
         responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false }, tooltip: {
-          callbacks: { label: ctx => ` ${fmtTime(ctx.raw)}` }
-        }},
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${fmtTime(c.raw)}` } } },
         scales: {
           x: { grid: { display: false }, ticks: { font: { size: 10 } } },
-          y: {
-            type: scaleType,
-            grid: { color: '#1e232980' },
-            ticks: { callback: v => fmtTime(v), font: { size: 10 } }
-          }
-        }
-      }
+          y: { type: scaleType, grid: { color: '#1e232980' }, ticks: { callback: v => fmtTime(v), font: { size: 10 } } },
+        },
+      },
     });
   });
 }
 
+// ── Speedup / comparison table ─────────────────────────────────────────────────
 function renderTable() {
-  const tbody = document.getElementById('table-body');
   const benches = filteredBenches();
-  tbody.innerHTML = benches.map(b => {
-    results = DATA[b].results
-    const go  = results.find(elem => elem.language === "go");
-    const cpp = results.find(elem => elem.language === "c++");
-    const py  = results.find(elem => elem.language === "python");
-    const pyT = py && !py.skipped ? py.exec_mean_s : null;
-    const goT = go && !go.skipped ? go.exec_mean_s : null;
-    const cppT = cpp && !cpp.skipped ? cpp.exec_mean_s : null;
+  const thead = document.getElementById('table-head');
+  const tbody = document.getElementById('table-body');
+  const title = document.getElementById('table-title');
 
-    const goSpeedup  = (pyT && goT)  ? pyT / goT  : null;
-    const cppSpeedup = (pyT && cppT) ? pyT / cppT : null;
+  if (viewMode === 'internal') {
+    title.textContent = 'comparison table — execution time vs slowest variant';
+    const nameSet = new Map();
+    for (const b of benches) {
+      DATA[b].results.forEach(r => { if (!nameSet.has(r.test_name)) nameSet.set(r.test_name, nameSet.size); });
+    }
+    const names = Array.from(nameSet.keys());
+
+    thead.innerHTML = `<tr>
+      <th>benchmark</th>
+      ${names.map((n, i) => `<th style="color:${PALETTE[i % PALETTE.length]}">${n}</th>`).join('')}
+      <th>fastest</th><th>vs slowest</th>
+    </tr>`;
+
+    tbody.innerHTML = benches.map(b => {
+      const results = DATA[b].results;
+      const timeCells = names.map(n => {
+        const r = results.find(x => x.test_name === n);
+        return `<td>${r && !r.skipped ? fmtTime(r.exec_mean_s) : '<span class="td-skip">—</span>'}</td>`;
+      }).join('');
+
+      const valid = results.filter(x => !x.skipped);
+      const slowest = valid.reduce((a, x) => x.exec_mean_s > a.exec_mean_s ? x : a, valid[0]);
+      const w = winner(b);
+      const speedup = (w && slowest && slowest.exec_mean_s > 0)
+        ? (slowest.exec_mean_s / w.exec_mean_s).toFixed(1) + '×'
+        : '—';
+      const wColor = w ? colorFor(b, w) : 'var(--muted)';
+
+      return `<tr>
+        <td class="td-bench">${b}</td>
+        ${timeCells}
+        <td style="color:${wColor};text-align:right">${w ? labelFor(w) : '—'}</td>
+        <td class="td-speedup ${w && parseFloat(speedup) >= 2 ? 'fast' : ''}" style="text-align:right">${speedup}</td>
+      </tr>`;
+    }).join('');
+
+  } else {
+    title.textContent = 'speedup table — execution time vs Python';
+    thead.innerHTML = `<tr>
+      <th>benchmark</th>
+      <th style="color:var(--python)">python</th>
+      <th style="color:var(--go)">go</th>
+      <th style="color:var(--cpp)">c++</th>
+      <th>go speedup</th>
+      <th>c++ speedup</th>
+      <th>winner</th>
+    </tr>`;
 
     function speedupClass(v) {
       if (!v) {
@@ -857,19 +969,32 @@ function renderTable() {
       return 'td-speedup';
     }
 
-    const w = winner(b);
-    return `<tr>
-      <td class="td-bench">${b}</td>
-      <td class="td-python">${pyT ? fmtTime(pyT) : '<span class="td-skip">skip</span>'}</td>
-      <td class="td-go">${goT ? fmtTime(goT) : '<span class="td-skip">skip</span>'}</td>
-      <td class="td-cpp">${cppT ? fmtTime(cppT) : '<span class="td-skip">skip</span>'}</td>
-      <td class="${speedupClass(goSpeedup)}">${goSpeedup ? goSpeedup.toFixed(1)+'×' : '—'}</td>
-      <td class="${speedupClass(cppSpeedup)}">${cppSpeedup ? cppSpeedup.toFixed(1)+'×' : '—'}</td>
-      <td class="td-${!w ? '' : w === "c++" ? "cpp" : w}">${w || '—'}</td>
-    </tr>`;
-  }).join('');
+    tbody.innerHTML = benches.map(b => {
+      const results = DATA[b].results;
+      const go  = results.find(r => r.language === 'go');
+      const cpp = results.find(r => r.language === 'c++');
+      const py  = results.find(r => r.language === 'python');
+      const pyT  = py  && !py.skipped  ? py.exec_mean_s  : null;
+      const goT  = go  && !go.skipped  ? go.exec_mean_s  : null;
+      const cppT = cpp && !cpp.skipped ? cpp.exec_mean_s : null;
+      const goX  = pyT && goT  ? pyT/goT  : null;
+      const cppX = pyT && cppT ? pyT/cppT : null;
+      const w = winner(b);
+      const wLang = w ? w.language : null;
+      return `<tr>
+        <td class="td-bench">${b}</td>
+        <td class="td-python">${pyT ? fmtTime(pyT) : '<span class="td-skip">skip</span>'}</td>
+        <td class="td-go">${goT ? fmtTime(goT) : '<span class="td-skip">skip</span>'}</td>
+        <td class="td-cpp">${cppT ? fmtTime(cppT) : '<span class="td-skip">skip</span>'}</td>
+        <td class="${speedupClass(goX)}">${goX ? goX.toFixed(1)+'×' : '—'}</td>
+        <td class="${speedupClass(cppX)}">${cppX ? cppX.toFixed(1)+'×' : '—'}</td>
+        <td class="td-${wLang === 'c++' ? 'cpp' : wLang || ''}">${wLang || '—'}</td>
+      </tr>`;
+    }).join('');
+  }
 }
 
+// ── Control handlers ───────────────────────────────────────────────────────────
 function setMetric(btn, m) {
   metric = m;
   document.querySelectorAll('[data-metric]').forEach(b => b.classList.remove('active'));
@@ -894,17 +1019,14 @@ function setScale(btn, s) {
   renderGrid();
 }
 
-function switchInternal(btn) {
-  const internal = "Internal"
-  const oposite = "Oposite"
-  showInternal = btn.textContent === internal
-  btn.textContent = btn.textContent === internal ? oposite : internal;
+function setView(btn, mode) {
+  viewMode = mode;
+  document.getElementById('btn-multi').classList.toggle('active',    mode === 'multi');
+  document.getElementById('btn-internal').classList.toggle('active', mode === 'internal');
   if (!DATA) {
     return;
   }
-  renderOverview();
-  renderGrid();
-  renderTable();
+  renderAll();
 }
 
 document.getElementById('filter-input').addEventListener('input', e => {
