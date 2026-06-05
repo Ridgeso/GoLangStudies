@@ -9,21 +9,21 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:        #0a0c0f;
-    --surface:   #111418;
-    --border:    #1e2329;
-    --border2:   #2a3140;
-    --go:        #00acd7;
-    --cpp:       #659ad2;
-    --py:        #ffd43b;
-    --go-dim:    #00acd740;
-    --cpp-dim:   #659ad240;
-    --py-dim:    #ffd43b40;
-    --text:      #e8eaed;
-    --muted:     #6b7685;
-    --accent:    #00acd7;
-    --red:       #ff6b6b;
-    --green:     #51cf66;
+    --bg:         #0a0c0f;
+    --surface:    #111418;
+    --border:     #1e2329;
+    --border2:    #2a3140;
+    --go:         #00acd7;
+    --cpp:        #659ad2;
+    --python:     #ffd43b;
+    --go-dim:     #00acd740;
+    --cpp-dim:    #659ad240;
+    --python-dim: #ffd43b40;
+    --text:       #e8eaed;
+    --muted:      #6b7685;
+    --accent:     #00acd7;
+    --red:        #ff6b6b;
+    --green:      #51cf66;
     --mono: 'IBM Plex Mono', monospace;
     --sans: 'IBM Plex Sans', sans-serif;
   }
@@ -66,9 +66,9 @@
     background: var(--border);
     color: var(--muted);
   }
-  .tag.go  { background: #00acd715; color: var(--go);  border: 1px solid #00acd730; }
-  .tag.cpp { background: #659ad215; color: var(--cpp); border: 1px solid #659ad230; }
-  .tag.py  { background: #ffd43b15; color: var(--py);  border: 1px solid #ffd43b30; }
+  .tag.go     { background: #00acd715; color: var(--go);  border: 1px solid #00acd730; }
+  .tag.cpp    { background: #659ad215; color: var(--cpp); border: 1px solid #659ad230; }
+  .tag.python { background: #ffd43b15; color: var(--python);  border: 1px solid #ffd43b30; }
 
   .load-btn {
     margin-left: auto;
@@ -134,9 +134,9 @@
   }
   .stat-cell .label { font-size: 11px; color: var(--muted); font-family: var(--mono); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .06em; }
   .stat-cell .value { font-family: var(--mono); font-size: 22px; font-weight: 600; }
-  .stat-cell .value.go  { color: var(--go); }
-  .stat-cell .value.cpp { color: var(--cpp); }
-  .stat-cell .value.py  { color: var(--py); }
+  .stat-cell .value.go      { color: var(--go); }
+  .stat-cell .value.cpp     { color: var(--cpp); }
+  .stat-cell .value.python  { color: var(--python); }
   .stat-cell .value.neutral { color: var(--text); }
 
   /* ── CONTROLS ── */
@@ -247,9 +247,9 @@
     padding: 2px 7px;
     border-radius: 3px;
   }
-  .winner-badge.go  { background: #00acd715; color: var(--go);  border: 1px solid #00acd730; }
-  .winner-badge.cpp { background: #659ad215; color: var(--cpp); border: 1px solid #659ad230; }
-  .winner-badge.py  { background: #ffd43b15; color: var(--py);  border: 1px solid #ffd43b30; }
+  .winner-badge.go      { background: #00acd715; color: var(--go);  border: 1px solid #00acd730; }
+  .winner-badge.cpp     { background: #659ad215; color: var(--cpp); border: 1px solid #659ad230; }
+  .winner-badge.python  { background: #ffd43b15; color: var(--python);  border: 1px solid #ffd43b30; }
   .bench-canvas-wrap { position: relative; height: 120px; }
   .bench-stats {
     display: grid;
@@ -265,9 +265,9 @@
   .bstat .bl { font-family: var(--mono); font-size: 10px; margin-bottom: 3px; }
   .bstat .bv { font-family: var(--mono); font-size: 12px; font-weight: 600; }
   .bstat .bs { font-family: var(--mono); font-size: 10px; color: var(--muted); }
-  .bstat.go  .bl { color: var(--go); }
-  .bstat.cpp .bl { color: var(--cpp); }
-  .bstat.py  .bl { color: var(--py); }
+  .bstat.go      .bl { color: var(--go); }
+  .bstat.cpp     .bl { color: var(--cpp); }
+  .bstat.python  .bl { color: var(--python); }
 
   /* ── SPEEDUP TABLE ── */
   .table-section { padding: 0 28px 28px; }
@@ -301,13 +301,13 @@
   }
   tbody td:not(:first-child) { text-align: right; }
   .td-bench { color: var(--text); font-weight: 500; }
-  .td-go  { color: var(--go);  }
-  .td-cpp { color: var(--cpp); }
-  .td-py  { color: var(--py);  }
+  .td-go      { color: var(--go);  }
+  .td-cpp     { color: var(--cpp); }
+  .td-python  { color: var(--python);  }
   .td-speedup { color: var(--muted); }
   .td-speedup.fast { color: var(--green); }
   .td-speedup.slow { color: var(--red); }
-  .td-speedup.med  { color: var(--py); }
+  .td-speedup.med  { color: var(--python); }
   .td-skip { color: var(--border2); }
 
   /* ── FILTER INPUT ── */
@@ -346,7 +346,7 @@
   <h1>bench<span class="pipe">/</span>viz</h1>
   <span class="tag go">Go</span>
   <span class="tag cpp">C++</span>
-  <span class="tag py">Python</span>
+  <span class="tag python">Python</span>
   <span id="run-meta" class="tag" style="display:none"></span>
   <button class="load-btn" onclick="document.getElementById('file-input').click()">Load JSON ↑</button>
   <input type="file" id="file-input" accept=".json">
@@ -361,7 +361,7 @@
     <polyline points="9 15 12 12 15 15"/>
   </svg>
   <p>Drop benchmark JSON here</p>
-  <small>output from benchmark.py</small>
+  <small>output from benchmark.go</small>
   <button class="or-btn" onclick="loadDemo()">Load demo data</button>
 </div>
 
@@ -414,7 +414,7 @@
         <thead>
           <tr>
             <th>benchmark</th>
-            <th style="color:var(--py)">python</th>
+            <th style="color:var(--python)">python</th>
             <th style="color:var(--go)">go</th>
             <th style="color:var(--cpp)">c++</th>
             <th>go speedup</th>
@@ -437,13 +437,8 @@ let filterQuery = '';
 let overviewChart = null;
 const miniCharts = {};
 
-const LANG_COLOR = { go: '#00acd7', cpp: '#659ad2', python: '#ffd43b' };
-const LANG_DIM   = { go: '#00acd740', cpp: '#659ad240', python: '#ffd43b40' };
-const CATEGORIES = {
-  fibonacci_iter: 'cpu', fibonacci_rec: 'cpu', prime_sieve: 'cpu',
-  matrix_mul: 'cpu', sort_ints: 'cpu', json_roundtrip: 'data',
-  string_build: 'data', hashmap: 'data', file_io: 'io', concurrency: 'concurrency'
-};
+const LANG_COLOR = { go: '#00acd7', "c++": '#659ad2', python: '#ffd43b' };
+const LANG_DIM   = { go: '#00acd740', "c++": '#659ad240', python: '#ffd43b40' };
 
 // Chart.js global defaults
 Chart.defaults.color = '#6b7685';
@@ -486,11 +481,8 @@ function readFile(file) {
 // ── Process data ───────────────────────────────────────────────────────────────
 function processData(raw) {
   const byBench = {};
-  for (const r of raw.results) {
-    if (!byBench[r.name]) {
-      byBench[r.name] = {};
-    }
-    byBench[r.name][r.language] = r;
+  for (const r of raw.benchmarks) {
+    byBench[r.name] = r;
   }
   return byBench;
 }
@@ -509,38 +501,109 @@ function loadData(raw) {
 // ── Demo data (the actual run) ─────────────────────────────────────────────────
 function loadDemo() {
   const demo = {
-    timestamp: 1779833849, runs_per_benchmark: 2,
-    results: [
-      {name:'fibonacci_iter', language:'go',     compile_s:8.474858, exec_mean_s:0.001088, exec_min_s:0.000955, exec_max_s:0.001221, total_s:8.475946, skipped:false},
-      {name:'fibonacci_iter', language:'cpp',    compile_s:0.356077, exec_mean_s:0.002729, exec_min_s:0.002625, exec_max_s:0.002834, total_s:0.358806, skipped:false},
-      {name:'fibonacci_iter', language:'python', compile_s:0,        exec_mean_s:0.013887, exec_min_s:0.013572, exec_max_s:0.014203, total_s:0.013887, skipped:false},
-      {name:'fibonacci_rec',  language:'go',     compile_s:0.147961, exec_mean_s:1.463849, exec_min_s:1.462645, exec_max_s:1.465054, total_s:1.611811, skipped:false},
-      {name:'fibonacci_rec',  language:'cpp',    compile_s:0.300205, exec_mean_s:0.457804, exec_min_s:0.455857, exec_max_s:0.459750, total_s:0.758008, skipped:false},
-      {name:'fibonacci_rec',  language:'python', compile_s:0,        exec_mean_s:28.822549,exec_min_s:28.47960, exec_max_s:29.16550, total_s:28.822549,skipped:false},
-      {name:'prime_sieve',    language:'go',     compile_s:0.156287, exec_mean_s:0.025204, exec_min_s:0.024735, exec_max_s:0.025674, total_s:0.181492, skipped:false},
-      {name:'prime_sieve',    language:'cpp',    compile_s:0.327557, exec_mean_s:0.026570, exec_min_s:0.026174, exec_max_s:0.026967, total_s:0.354127, skipped:false},
-      {name:'prime_sieve',    language:'python', compile_s:0,        exec_mean_s:0.061477, exec_min_s:0.061067, exec_max_s:0.061887, total_s:0.061477, skipped:false},
-      {name:'matrix_mul',     language:'go',     compile_s:0.147015, exec_mean_s:0.069585, exec_min_s:0.069116, exec_max_s:0.070055, total_s:0.216600, skipped:false},
-      {name:'matrix_mul',     language:'cpp',    compile_s:0.351228, exec_mean_s:0.037329, exec_min_s:0.036221, exec_max_s:0.038437, total_s:0.388556, skipped:false},
-      {name:'matrix_mul',     language:'python', compile_s:0,        exec_mean_s:6.879435, exec_min_s:6.688957, exec_max_s:7.069914, total_s:6.879435, skipped:false},
-      {name:'sort_ints',      language:'go',     compile_s:0.144840, exec_mean_s:1.006724, exec_min_s:1.005721, exec_max_s:1.007728, total_s:1.151564, skipped:false},
-      {name:'sort_ints',      language:'cpp',    compile_s:0.394837, exec_mean_s:0.830280, exec_min_s:0.828959, exec_max_s:0.831600, total_s:1.225117, skipped:false},
-      {name:'sort_ints',      language:'python', compile_s:0,        exec_mean_s:2.890641, exec_min_s:2.211455, exec_max_s:3.569827, total_s:2.890641, skipped:false},
-      {name:'json_roundtrip', language:'go',     compile_s:1.029985, exec_mean_s:0.550370, exec_min_s:0.548874, exec_max_s:0.551865, total_s:1.580355, skipped:false},
-      {name:'json_roundtrip', language:'cpp',    compile_s:0.425256, exec_mean_s:0.150377, exec_min_s:0.149323, exec_max_s:0.151431, total_s:0.575633, skipped:false},
-      {name:'json_roundtrip', language:'python', compile_s:0,        exec_mean_s:0.762799, exec_min_s:0.756311, exec_max_s:0.769286, total_s:0.762799, skipped:false},
-      {name:'string_build',   language:'go',     compile_s:0.146499, exec_mean_s:0.067314, exec_min_s:0.066780, exec_max_s:0.067848, total_s:0.213813, skipped:false},
-      {name:'string_build',   language:'cpp',    compile_s:0.296533, exec_mean_s:0.014244, exec_min_s:0.013569, exec_max_s:0.014920, total_s:0.310777, skipped:false},
-      {name:'string_build',   language:'python', compile_s:0,        exec_mean_s:0.103243, exec_min_s:0.101246, exec_max_s:0.105241, total_s:0.103243, skipped:false},
-      {name:'hashmap',        language:'go',     compile_s:0.143036, exec_mean_s:0.231401, exec_min_s:0.225926, exec_max_s:0.236876, total_s:0.374437, skipped:false},
-      {name:'hashmap',        language:'cpp',    compile_s:0.376847, exec_mean_s:0.107907, exec_min_s:0.103604, exec_max_s:0.112211, total_s:0.484755, skipped:false},
-      {name:'hashmap',        language:'python', compile_s:0,        exec_mean_s:0.354379, exec_min_s:0.353512, exec_max_s:0.355245, total_s:0.354379, skipped:false},
-      {name:'file_io',        language:'go',     compile_s:0.241723, exec_mean_s:0.050378, exec_min_s:0.050316, exec_max_s:0.050440, total_s:0.292101, skipped:false},
-      {name:'file_io',        language:'cpp',    compile_s:0.311593, exec_mean_s:0.070030, exec_min_s:0.069909, exec_max_s:0.070151, total_s:0.381623, skipped:false},
-      {name:'file_io',        language:'python', compile_s:0,        exec_mean_s:0.229693, exec_min_s:0.224781, exec_max_s:0.234604, total_s:0.229693, skipped:false},
-      {name:'concurrency',    language:'go',     compile_s:0.148977, exec_mean_s:0.008601, exec_min_s:0.008044, exec_max_s:0.009158, total_s:0.157578, skipped:false},
-      {name:'concurrency',    language:'cpp',    compile_s:0.435122, exec_mean_s:0.067801, exec_min_s:0.046849, exec_max_s:0.088752, total_s:0.502923, skipped:false},
-      {name:'concurrency',    language:'python', compile_s:0,        exec_mean_s:0.486714, exec_min_s:0.484999, exec_max_s:0.488429, total_s:0.486714, skipped:false},
+    timestamp: 1779833849,
+    runs_per_benchmark: 2,
+    benchmarks: [
+      {
+        name:'fibonacci_iter',
+        internal:false,
+        category:"cpu",
+        results:[
+          {test_name:"goSrc",     language:'go',     compile_s:8.474858, exec_mean_s:0.001088, exec_min_s:0.000955, exec_max_s:0.001221, total_s:8.475946, skipped:false},
+          {test_name:"cppSrc",    language:'c++',    compile_s:0.356077, exec_mean_s:0.002729, exec_min_s:0.002625, exec_max_s:0.002834, total_s:0.358806, skipped:false},
+          {test_name:"pythonSrc", language:'python', compile_s:0,        exec_mean_s:0.013887, exec_min_s:0.013572, exec_max_s:0.014203, total_s:0.013887, skipped:false},
+        ],
+      },
+      {
+        name:'fibonacci_rec',
+        internal:false,
+        category:"cpu",
+        results:[
+          {test_name:"goSrc",     language:'go',     compile_s:0.147961, exec_mean_s:1.463849, exec_min_s:1.462645, exec_max_s:1.465054, total_s:1.611811, skipped:false},
+          {test_name:"cppSrc",    language:'c++',    compile_s:0.300205, exec_mean_s:0.457804, exec_min_s:0.455857, exec_max_s:0.459750, total_s:0.758008, skipped:false},
+          {test_name:"pythonSrc", language:'python', compile_s:0,        exec_mean_s:28.822549,exec_min_s:28.47960, exec_max_s:29.16550, total_s:28.822549,skipped:false},
+        ],
+      },
+      {
+        name:'prime_sieve',
+        internal:false,
+        category:"cpu",
+        results:[
+          {test_name:"goSrc",     language:'go',     compile_s:0.156287, exec_mean_s:0.025204, exec_min_s:0.024735, exec_max_s:0.025674, total_s:0.181492, skipped:false},
+          {test_name:"cppSrc",    language:'c++',    compile_s:0.327557, exec_mean_s:0.026570, exec_min_s:0.026174, exec_max_s:0.026967, total_s:0.354127, skipped:false},
+          {test_name:"pythonSrc", language:'python', compile_s:0,        exec_mean_s:0.061477, exec_min_s:0.061067, exec_max_s:0.061887, total_s:0.061477, skipped:false},
+        ],
+      },
+      {
+        name:'matrix_mul',
+        internal:false,
+        category:"cpu",
+        results:[
+          {test_name:"goSrc",     language:'go',     compile_s:0.147015, exec_mean_s:0.069585, exec_min_s:0.069116, exec_max_s:0.070055, total_s:0.216600, skipped:false},
+          {test_name:"cppSrc",    language:'c++',    compile_s:0.351228, exec_mean_s:0.037329, exec_min_s:0.036221, exec_max_s:0.038437, total_s:0.388556, skipped:false},
+          {test_name:"pythonSrc", language:'python', compile_s:0,        exec_mean_s:6.879435, exec_min_s:6.688957, exec_max_s:7.069914, total_s:6.879435, skipped:false},
+        ],
+      },
+      {
+        name:'sort_ints',
+        internal:false,
+        category:"cpu",
+        results:[
+          {test_name:"goSrc",     language:'go',     compile_s:0.144840, exec_mean_s:1.006724, exec_min_s:1.005721, exec_max_s:1.007728, total_s:1.151564, skipped:false},
+          {test_name:"cppSrc",    language:'c++',    compile_s:0.394837, exec_mean_s:0.830280, exec_min_s:0.828959, exec_max_s:0.831600, total_s:1.225117, skipped:false},
+          {test_name:"pythonSrc", language:'python', compile_s:0,        exec_mean_s:2.890641, exec_min_s:2.211455, exec_max_s:3.569827, total_s:2.890641, skipped:false},
+        ],
+      },
+      {
+        name:'json_roundtrip',
+        internal:false,
+        category:"cpu",
+        results:[
+          {test_name:"goSrc",     language:'go',     compile_s:1.029985, exec_mean_s:0.550370, exec_min_s:0.548874, exec_max_s:0.551865, total_s:1.580355, skipped:false},
+          {test_name:"cppSrc",    language:'c++',    compile_s:0.425256, exec_mean_s:0.150377, exec_min_s:0.149323, exec_max_s:0.151431, total_s:0.575633, skipped:false},
+          {test_name:"pythonSrc", language:'python', compile_s:0,        exec_mean_s:0.062799, exec_min_s:0.756311, exec_max_s:0.769286, total_s:0.762799, skipped:false},
+        ],
+      },
+      {
+        name:'string_build_multi_lang',
+        internal:false,
+        category:"data",
+        results:[
+          {test_name:"goSrc",     language:'go',     compile_s:0.146499, exec_mean_s:0.067314, exec_min_s:0.066780, exec_max_s:0.067848, total_s:0.213813, skipped:false},
+          {test_name:"cppSrc",    language:'c++',    compile_s:0.296533, exec_mean_s:0.014244, exec_min_s:0.013569, exec_max_s:0.014920, total_s:0.310777, skipped:false},
+          {test_name:"pythonSrc", language:'python', compile_s:0,        exec_mean_s:0.103243, exec_min_s:0.101246, exec_max_s:0.105241, total_s:0.103243, skipped:false},
+        ],
+      },
+      {
+        name:'hashmap',
+        internal:false,
+        category:"data",
+        results:[
+          {test_name:"goSrc",     language:'go',     compile_s:0.143036, exec_mean_s:0.231401, exec_min_s:0.225926, exec_max_s:0.236876, total_s:0.374437, skipped:false},
+          {test_name:"cppSrc",    language:'c++',    compile_s:0.376847, exec_mean_s:0.107907, exec_min_s:0.103604, exec_max_s:0.112211, total_s:0.484755, skipped:false},
+          {test_name:"pythonSrc", language:'python', compile_s:0,        exec_mean_s:0.354379, exec_min_s:0.353512, exec_max_s:0.355245, total_s:0.354379, skipped:false},
+        ],
+      },
+      {
+        name:'file_io',
+        internal:false,
+        category:"io",
+        results:[
+          {test_name:"goSrc",     language:'go',     compile_s:0.241723, exec_mean_s:0.050378, exec_min_s:0.050316, exec_max_s:0.050440, total_s:0.292101, skipped:false},
+          {test_name:"cppSrc",    language:'c++',    compile_s:0.311593, exec_mean_s:0.070030, exec_min_s:0.069909, exec_max_s:0.070151, total_s:0.381623, skipped:false},
+          {test_name:"pythonSrc", language:'python', compile_s:0,        exec_mean_s:0.229693, exec_min_s:0.224781, exec_max_s:0.234604, total_s:0.229693, skipped:false},
+        ],
+      },
+      {
+        name:'concurrency',
+        internal:false,
+        category:"concurrency",
+        results:[
+          {test_name:"goSrc",     language:'go',     compile_s:0.148977, exec_mean_s:0.008601, exec_min_s:0.008044, exec_max_s:0.009158, total_s:0.157578, skipped:false},
+          {test_name:"cppSrc",    language:'c++',    compile_s:0.435122, exec_mean_s:0.067801, exec_min_s:0.046849, exec_max_s:0.088752, total_s:0.502923, skipped:false},
+          {test_name:"pythonSrc", language:'python', compile_s:0,        exec_mean_s:0.486714, exec_min_s:0.484999, exec_max_s:0.488429, total_s:0.486714, skipped:false},
+        ],
+      },
     ]
   };
   loadData(demo);
@@ -568,15 +631,14 @@ function fmtTime(s) {
 }
 
 function winner(bench) {
-  const langs = ['go','cpp','python'];
   let best = null, bestT = Infinity;
-  for (const l of langs) {
-    const r = DATA[bench]?.[l];
-    if (!r || r.skipped) {
+  for (const r of DATA[bench].results) {
+    if (r.skipped) {
       continue;
     }
     if (r.exec_mean_s < bestT) {
-      bestT = r.exec_mean_s; best = l;
+      bestT = r.exec_mean_s;
+      best = r.language;
     }
   }
   return best;
@@ -604,12 +666,12 @@ function renderSummary() {
   }
   const pyT = totals.python;
   const cells = [
-    { label:'go total exec',   value: fmtTime(totals.go),     cls:'go'  },
-    { label:'c++ total exec',  value: fmtTime(totals.cpp),    cls:'cpp' },
-    { label:'python total exec', value: fmtTime(totals.python), cls:'py' },
-    { label:'go avg speedup',  value: (pyT/totals.go).toFixed(1)+'×',  cls:'go' },
-    { label:'c++ avg speedup', value: (pyT/totals.cpp).toFixed(1)+'×', cls:'cpp' },
-    { label:'benchmarks',      value: benches.length,          cls:'neutral' },
+    { label:'go total exec',     value: fmtTime(totals.go),              cls:'go'  },
+    { label:'c++ total exec',    value: fmtTime(totals.cpp),             cls:'cpp' },
+    { label:'python total exec', value: fmtTime(totals.python),          cls:'python' },
+    { label:'go avg speedup',    value: (pyT/totals.go).toFixed(1)+'×',  cls:'go' },
+    { label:'c++ avg speedup',   value: (pyT/totals.cpp).toFixed(1)+'×', cls:'cpp' },
+    { label:'benchmarks',        value: benches.length,                  cls:'neutral' },
   ];
   document.getElementById('summary-strip').innerHTML = cells.map(c =>
     `<div class="stat-cell"><div class="label">${c.label}</div><div class="value ${c.cls}">${c.value}</div></div>`
@@ -623,11 +685,13 @@ function filteredBenches() {
 
 function getOverviewDatasets() {
   const benches = filteredBenches();
-  return ['go','cpp','python'].map(lang => ({
-    label: lang === 'python' ? 'Python' : lang === 'cpp' ? 'C++' : 'Go',
+  return ['go','c++','python'].map(lang => ({
+    label: lang === 'python' ? 'Python' : lang === 'c++' ? 'C++' : 'Go',
     data: benches.map(b => {
-      const r = DATA[b]?.[lang];
-      if (!r || r.skipped) return 0;
+      const r = DATA[b].results.find(elem => elem.language === lang);
+      if (!r || r.skipped) {
+        return 0;
+      }
       return parseFloat((r[metric] || 0).toFixed(6));
     }),
     backgroundColor: LANG_COLOR[lang] + '80',
@@ -639,7 +703,9 @@ function getOverviewDatasets() {
 }
 
 function renderOverview() {
-  if (overviewChart) overviewChart.destroy();
+  if (overviewChart) {
+    overviewChart.destroy();
+  }
   const benches = filteredBenches();
   const ctx = document.getElementById('overview-chart');
   overviewChart = new Chart(ctx, {
@@ -675,37 +741,36 @@ function renderGrid() {
   grid.innerHTML = '';
   const benches = filteredBenches();
   benches.forEach((b, idx) => {
+    results = DATA[b].results;
     const card = document.createElement('div');
     card.className = 'bench-card';
     card.style.animationDelay = (idx * 30) + 'ms';
     const w = winner(b);
-    const cat = CATEGORIES[b] || 'misc';
+    const cat = DATA[b].category || 'misc';
     card.innerHTML = `
       <div class="bench-card-header">
         <span class="bench-name">${b.replace(/_/g, '_\u200b')}</span>
         <span class="bench-category">${cat}</span>
-        ${w ? `<span class="winner-badge ${w}">${w === 'python' ? 'py' : w} fastest</span>` : ''}
+        ${w ? `<span class="winner-badge ${w === "c++" ? "cpp" : w}">${w} fastest</span>` : ''}
       </div>
       <div class="bench-canvas-wrap"><canvas id="mini-${b}"></canvas></div>
       <div class="bench-stats">
-        ${['go','cpp','python'].map(l => {
-          const r = DATA[b]?.[l];
+        ${results.map(r => {
           const v = r && !r.skipped ? fmtTime(r.exec_mean_s) : '—';
-          const py = DATA[b]?.python;
-          const speedup = (l !== 'python' && r && !r.skipped && py && !py.skipped && r.exec_mean_s > 0)
-            ? (py.exec_mean_s / r.exec_mean_s).toFixed(1) + '×'
-            : '';
-          return `<div class="bstat ${l}">
-            <div class="bl">${l === 'python' ? 'python' : l === 'cpp' ? 'c++' : 'go'}</div>
+          const py = results.find(elem => elem.language === "python")
+          const speedup = (r.language !== 'python' && !r.skipped && py && !py.skipped && r.exec_mean_s > 0)
+            ? (py.exec_mean_s / r.exec_mean_s).toFixed(1)
+            : -1.0;
+          return `<div class="bstat ${r.language === "c++" ? "cpp" : r.language}">
+            <div class="bl">${r.language}</div>
             <div class="bv">${v}</div>
-            ${speedup ? `<div class="bs">${speedup} faster</div>` : '<div class="bs">&nbsp;</div>'}
+            ${speedup < 0.0 ? `<div class="bs">${speedup + '×'} ${speedup < 1.0 ? "slower" : "faster"}</div>` : '<div class="bs">&nbsp;</div>'}
           </div>`;
         }).join('')}
       </div>`;
     grid.appendChild(card);
 
     // mini chart
-    const langs = ['go','cpp','python'];
     const ctx = card.querySelector(`#mini-${b}`);
     if (miniCharts[b]) miniCharts[b].destroy();
     miniCharts[b] = new Chart(ctx, {
@@ -713,12 +778,11 @@ function renderGrid() {
       data: {
         labels: ['Go','C++','Python'],
         datasets: [{
-          data: langs.map(l => {
-            const r = DATA[b]?.[l];
+          data: results.map(r => {
             return (r && !r.skipped) ? parseFloat((r.exec_mean_s || 0).toFixed(6)) : 0;
           }),
-          backgroundColor: langs.map(l => LANG_COLOR[l] + '70'),
-          borderColor:      langs.map(l => LANG_COLOR[l]),
+          backgroundColor: results.map(r => LANG_COLOR[r.language] + '70'),
+          borderColor:     results.map(r => LANG_COLOR[r.language]),
           borderWidth: 1,
           borderRadius: 3,
           borderSkipped: false,
@@ -746,9 +810,10 @@ function renderTable() {
   const tbody = document.getElementById('table-body');
   const benches = filteredBenches();
   tbody.innerHTML = benches.map(b => {
-    const go  = DATA[b]?.go;
-    const cpp = DATA[b]?.cpp;
-    const py  = DATA[b]?.python;
+    results = DATA[b].results
+    const go  = results.find(elem => elem.language === "go");
+    const cpp = results.find(elem => elem.language === "c++");
+    const py  = results.find(elem => elem.language === "python");
     const pyT = py && !py.skipped ? py.exec_mean_s : null;
     const goT = go && !go.skipped ? go.exec_mean_s : null;
     const cppT = cpp && !cpp.skipped ? cpp.exec_mean_s : null;
@@ -775,12 +840,12 @@ function renderTable() {
     const w = winner(b);
     return `<tr>
       <td class="td-bench">${b}</td>
-      <td class="td-py">${pyT ? fmtTime(pyT) : '<span class="td-skip">skip</span>'}</td>
+      <td class="td-python">${pyT ? fmtTime(pyT) : '<span class="td-skip">skip</span>'}</td>
       <td class="td-go">${goT ? fmtTime(goT) : '<span class="td-skip">skip</span>'}</td>
       <td class="td-cpp">${cppT ? fmtTime(cppT) : '<span class="td-skip">skip</span>'}</td>
       <td class="${speedupClass(goSpeedup)}">${goSpeedup ? goSpeedup.toFixed(1)+'×' : '—'}</td>
       <td class="${speedupClass(cppSpeedup)}">${cppSpeedup ? cppSpeedup.toFixed(1)+'×' : '—'}</td>
-      <td class="td-${w || ''}">${w || '—'}</td>
+      <td class="td-${!w ? '' : w === "c++" ? "cpp" : w}">${w || '—'}</td>
     </tr>`;
   }).join('');
 }

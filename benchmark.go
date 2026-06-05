@@ -40,8 +40,8 @@ type RunResult struct {
 	WallSecond float64 `json:"wall_seconds"`
 }
 
-type BenchmarkResult struct {
-	Name       string    `json:"name"`
+type TestResult struct {
+	TestName   string	 `json:"test_name"`
 	Language   string    `json:"language"`
 	CompileS   *float64  `json:"compile_s"`
 	RunsS      []float64 `json:"runs_s"`
@@ -53,7 +53,13 @@ type BenchmarkResult struct {
 	Error      string    `json:"error"`
 	Skipped    bool      `json:"skipped"`
 	SkipReason string    `json:"skip_reason"`
-	Internal   bool		 `json:"internal"`
+}
+
+type BenchmarkResult struct {
+	Name       string    	`json:"name"`
+	Internal   bool		 	`json:"internal"`
+	Category   string	 `json:"category"`
+	Results    []TestResult `json:"results"`
 }
 
 type Benchmark struct {
@@ -132,7 +138,7 @@ func skipLang(lang string) bool {
 	switch lang {
 		case "go":
 			return *noGo
-		case "cpp":
+		case "c++":
 			return *noCpp
 		case "python":
 			return *noPy
@@ -146,7 +152,7 @@ func mapExt2Lang(path string) string {
 		case ".go":
 			return "go"
 		case ".cpp":
-			return "cpp"
+			return "c++"
 		case ".py":
 			return "python"
 		default:
@@ -154,12 +160,12 @@ func mapExt2Lang(path string) string {
 	}
 }
 
-func runBenchmark(name, src string, runs, timeout int) BenchmarkResult {	
-	lang := mapExt2Lang(src)
+func runLangBenchmark(name, lang, src string, runs, timeout int) TestResult {	
 	var binary string
 	sum := 0.0
 
-	res := BenchmarkResult{Name: name, Language: lang}
+	testName := strings.TrimSuffix(filepath.Base(src), filepath.Ext(src))
+	res := TestResult{TestName: testName, Language: lang}
 
 	if skipLang(lang) {
 		res.Skipped = true
@@ -188,7 +194,7 @@ func runBenchmark(name, src string, runs, timeout int) BenchmarkResult {
 				res.SkipReason = ce
 				return res
 			}
-		case "cpp":
+		case "c++":
 			binary = filepath.Join(BUILD_DIR, name+"_cpp")
 			if runtime.GOOS == "windows" {
 				binary += ".exe"
@@ -248,6 +254,29 @@ finishBenchmark:
 	return res
 }
 
+func runBenchmark(b Benchmark, runs, timeout int) BenchmarkResult {	
+	res := BenchmarkResult{
+		Name: b.Name,
+		Internal: false,
+		Category: b.Category,
+		Results: make([]TestResult, 0),
+	}
+
+	srcs, err := buildTestSources(b.SrcPath)
+	if err != nil {
+		fmt.Println("problem with reading ", b.Name," files: ", err)
+		return res
+	}
+
+	for _, src := range srcs {
+		lang := mapExt2Lang(src)
+		r := runLangBenchmark(b.Name, lang, src, runs, timeout)
+		res.Results = append(res.Results, r)
+	}
+
+	return res
+}
+
 func init() {
 	flag.Parse()
 
@@ -264,18 +293,10 @@ func main() {
 			continue
 		}
 
-		srcs, err := buildTestSources(b.SrcPath)
-		if err != nil {
-			fmt.Println("problem with reading ", strings.ToUpper(b.Category)," files: ", err)
-			continue
-		}
-
 		fmt.Printf("[%s] %s\n", strings.ToUpper(b.Category), b.Name)
 
-		for _, src := range srcs {
-			r := runBenchmark(b.Name, src, *runs, *timeout)
-			results = append(results, r)
-		}
+		r := runBenchmark(b, *runs, *timeout)
+		results = append(results, r)
 	}
 
 	payload := map[string]any{
@@ -283,7 +304,7 @@ func main() {
 		"runs_per_benchmark": *runs,
 		"timeout_s":		  *timeout,
 		"total_wall_s":		  time.Since(start).Seconds(),
-		"results":			  results,
+		"benchmarks":		  results,
 	}
 
 	data, _ := json.MarshalIndent(payload, "", "  ")
