@@ -10,6 +10,6 @@ int64_t fibRec(int64_t n) {
 
 int main()
 {
-    printf("%lld\n", fibRec(42));
+    printf("%lld\n", fibRec(40));
     return 0;
 }

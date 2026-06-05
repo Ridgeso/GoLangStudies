@@ -10,5 +10,5 @@ func fibRec(n int) int64 {
 }
 
 func main() {
-	fmt.Println(fibRec(42))
+	fmt.Println(fibRec(40))
 }

@@ -19,10 +19,6 @@ var (
 	SRC       = filepath.Join(ROOT, "tests")
 	RESULTS   = filepath.Join(ROOT, "results")
 	BUILD_DIR = filepath.Join(ROOT, "build")
-
-	GO_NAME  = "goSrc.go"
-	CPP_NAME = "cppSrc.cpp"
-	PY_NAME  = "pythonSrc.py"
 )
 
 var (
@@ -70,7 +66,7 @@ type Benchmark struct {
 var benchmarks = []Benchmark{
 	{"concurrency",    			  "concurrency",    		  "concurrency", "Concurrency benchmark"},
 	{"fibonacci_iter", 			  "fibonacci",      		  "cpu", 		 "Fibonacci(40) iterative"},
-	{"fibonacci_rec",  			  "fibRecursive",   		  "cpu", 		 "Fibonacci(42) recursive"},
+	{"fibonacci_rec",  			  "fibRecursive",   		  "cpu", 		 "Fibonacci(40) recursive"},
 	{"file_io",		   			  "fileIO", 				  "io",          "File IO"},
 	{"hashmap",	       			  "hashmap",        		  "data",        "Hashmap benchmark"},
 	{"json_roundtrip", 			  "jsonParser",     		  "data", 	     "JSON encode/decode"},
@@ -107,14 +103,29 @@ func runCmd(timeout int, cwd string, cmd string, args ...string) RunResult {
 	return RunResult{0, strings.TrimSpace(string(out)), "", elapsed}
 }
 
-func compileGo(src, out string, timeout int, goBin string) (float64, string, bool) {
-	r := runCmd(timeout, "", goBin, "build", "-o", out, src)
+func compileGo(src, out string, timeout int) (float64, string, bool) {
+	r := runCmd(timeout, "", *goCompiler, "build", "-o", out, src)
 	return r.WallSecond, r.Stderr, r.ExitCode == 0
 }
 
-func compileCpp(src, out string, timeout int, cpp string) (float64, string, bool) {
-	r := runCmd(timeout, "", cpp, "-O2", "-std=c++17", "-pthread", "-o", out, src)
+func compileCpp(src, out string, timeout int) (float64, string, bool) {
+	r := runCmd(timeout, "", *cppCompiler, "-O2", "-std=c++17", "-pthread", "-o", out, src)
 	return r.WallSecond, r.Stderr, r.ExitCode == 0
+}
+
+func buildTestSources(testSrc string) ([]string, error) {
+	var srcs []string
+	srcBase := filepath.Join(SRC, testSrc)
+	err := filepath.Walk(
+		srcBase,
+		func(path string, f os.FileInfo, err error) error {
+			if filepath.Ext(path) == "" {
+				return err
+			}
+			srcs = append(srcs, path)
+			return err
+		})
+	return srcs, err
 }
 
 func skipLang(lang string) bool {
@@ -143,7 +154,7 @@ func mapExt2Lang(path string) string {
 	}
 }
 
-func runBenchmark(name, src string, runs, timeout int, goBin, cppBin string) BenchmarkResult {	
+func runBenchmark(name, src string, runs, timeout int) BenchmarkResult {	
 	lang := mapExt2Lang(src)
 	var binary string
 	sum := 0.0
@@ -169,7 +180,7 @@ func runBenchmark(name, src string, runs, timeout int, goBin, cppBin string) Ben
 			if runtime.GOOS == "windows" {
 				binary += ".exe"
 			}
-			ct, ce, ok := compileGo(src, binary, timeout, goBin)
+			ct, ce, ok := compileGo(src, binary, timeout)
 			res.CompileS = &ct
 			if !ok {
 				res.Skipped = true
@@ -182,7 +193,7 @@ func runBenchmark(name, src string, runs, timeout int, goBin, cppBin string) Ben
 			if runtime.GOOS == "windows" {
 				binary += ".exe"
 			}
-			ct, ce, ok := compileCpp(src, binary, timeout, cppBin)
+			ct, ce, ok := compileCpp(src, binary, timeout)
 			res.CompileS = &ct
 			if !ok {
 				res.Skipped = true
@@ -253,17 +264,7 @@ func main() {
 			continue
 		}
 
-		srcBase := filepath.Join(SRC, b.SrcPath)
-		var srcs []string
-		err := filepath.Walk(
-			srcBase,
-			func(path string, f os.FileInfo, err error) error {
-				if filepath.Ext(path) == "" {
-					return err
-				}
-				srcs = append(srcs, path)
-				return err
-			})
+		srcs, err := buildTestSources(b.SrcPath)
 		if err != nil {
 			fmt.Println("problem with reading ", strings.ToUpper(b.Category)," files: ", err)
 			continue
@@ -272,7 +273,7 @@ func main() {
 		fmt.Printf("[%s] %s\n", strings.ToUpper(b.Category), b.Name)
 
 		for _, src := range srcs {
-			r := runBenchmark(b.Name, src, *runs, *timeout, *goCompiler, *cppCompiler)
+			r := runBenchmark(b.Name, src, *runs, *timeout)
 			results = append(results, r)
 		}
 	}

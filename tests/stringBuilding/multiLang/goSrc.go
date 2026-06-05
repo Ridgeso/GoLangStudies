@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -10,8 +11,8 @@ func main() {
 	sb.Grow(8_000_000)
 	for i := 0; i < 500_000; i++ {
 		sb.WriteString("word")
-        sb.WriteString(strconv.Itoa(i))
-        sb.WriteByte(' ')
+		sb.WriteString(strconv.Itoa(i))
+		sb.WriteByte(' ')
 	}
 	fmt.Println(len(sb.String()))
 }

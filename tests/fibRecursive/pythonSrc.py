@@ -6,4 +6,4 @@ def fib_rec(n):
         return n
     return fib_rec(n-1) + fib_rec(n-2)
 
-print(fib_rec(42))
+print(fib_rec(40))
