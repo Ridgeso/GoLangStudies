@@ -140,8 +140,9 @@
   .stat-cell .value.neutral { color: var(--text); }
 
   /* ── CONTROLS ── */
-  .controls {
+  .control-split {
     display: flex;
+    justify-content: space-between;
     gap: 8px;
     align-items: center;
     flex-wrap: wrap;
@@ -149,8 +150,23 @@
     border-bottom: 1px solid var(--border);
     background: var(--surface);
   }
-  .ctrl-label { font-family: var(--mono); font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-right: 4px; }
-  .btn-group { display: flex; gap: 4px; }
+  .controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .ctrl-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-right: 4px;
+  }
+  .btn-group {
+    display: flex; gap: 4px;
+  }
   .ctrl-btn {
     font-family: var(--mono);
     font-size: 12px;
@@ -338,18 +354,24 @@
   <div class="summary-strip" id="summary-strip"></div>
 
   <!-- Controls -->
-  <div class="controls">
-    <span class="ctrl-label">metric</span>
-    <div class="btn-group">
-      <button class="ctrl-btn active" data-metric="exec_mean_s" onclick="setMetric(this,'exec_mean_s')">execution</button>
-      <button class="ctrl-btn" data-metric="compile_s" onclick="setMetric(this,'compile_s')">compile</button>
-      <button class="ctrl-btn" data-metric="total_s" onclick="setMetric(this,'total_s')">total</button>
+  <div class="control-split">
+    <div class="controls">
+      <span class="ctrl-label">metric</span>
+      <div class="btn-group">
+        <button class="ctrl-btn active" data-metric="exec_mean_s" onclick="setMetric(this,'exec_mean_s')">execution</button>
+        <button class="ctrl-btn" data-metric="compile_s" onclick="setMetric(this,'compile_s')">compile</button>
+        <button class="ctrl-btn" data-metric="total_s" onclick="setMetric(this,'total_s')">total</button>
+      </div>
+      <div class="divider"></div>
+      <span class="ctrl-label">scale</span>
+      <div class="btn-group">
+        <button class="ctrl-btn active" onclick="setScale(this,'linear')">linear</button>
+        <button class="ctrl-btn" onclick="setScale(this,'logarithmic')">log</button>
+      </div>
     </div>
-    <div class="divider"></div>
-    <span class="ctrl-label">scale</span>
-    <div class="btn-group">
-      <button class="ctrl-btn active" onclick="setScale(this,'linear')">linear</button>
-      <button class="ctrl-btn" onclick="setScale(this,'logarithmic')">log</button>
+    <div>
+      <span class="ctrl-label">FILTER TESTS</span>
+      <input id="filter-input" placeholder="TEST NAME" name="filter"/>
     </div>
   </div>
 
@@ -413,7 +435,9 @@ Chart.defaults.font.size = 11;
 // ── File loading ───────────────────────────────────────────────────────────────
 document.getElementById('file-input').addEventListener('change', e => {
   const file = e.target.files[0];
-  if (file) readFile(file);
+  if (file) {
+    readFile(file);
+  }
 });
 
 const dz = document.getElementById('drop-zone');
@@ -422,7 +446,9 @@ dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
 dz.addEventListener('drop', e => {
   e.preventDefault(); dz.classList.remove('drag-over');
   const file = e.dataTransfer.files[0];
-  if (file) readFile(file);
+  if (file) {
+    readFile(file);
+  }
 });
 dz.addEventListener('click', () => document.getElementById('file-input').click());
 
@@ -443,7 +469,9 @@ function readFile(file) {
 function processData(raw) {
   const byBench = {};
   for (const r of raw.results) {
-    if (!byBench[r.name]) byBench[r.name] = {};
+    if (!byBench[r.name]) {
+      byBench[r.name] = {};
+    }
     byBench[r.name][r.language] = r;
   }
   return byBench;
@@ -509,9 +537,15 @@ function renderAll() {
 }
 
 function fmtTime(s) {
-  if (s == null || s < 0) return '—';
-  if (s < 0.001)  return (s * 1000).toFixed(3) + ' ms';
-  if (s < 1)      return (s * 1000).toFixed(1) + ' ms';
+  if (s == null || s < 0) {
+    return '—';
+  }
+  if (s < 0.001) {
+    return (s * 1000).toFixed(3) + ' ms';
+  }
+  if (s < 1) {
+    return (s * 1000).toFixed(1) + ' ms';
+  }
   return s.toFixed(3) + ' s';
 }
 
@@ -520,8 +554,12 @@ function winner(bench) {
   let best = null, bestT = Infinity;
   for (const l of langs) {
     const r = DATA[bench]?.[l];
-    if (!r || r.skipped) continue;
-    if (r.exec_mean_s < bestT) { bestT = r.exec_mean_s; best = l; }
+    if (!r || r.skipped) {
+      continue;
+    }
+    if (r.exec_mean_s < bestT) {
+      bestT = r.exec_mean_s; best = l;
+    }
   }
   return best;
 }
@@ -533,11 +571,17 @@ function renderSummary() {
   for (const b of benches) {
     for (const l of ['go','cpp','python']) {
       const r = DATA[b]?.[l];
-      if (r && !r.skipped) totals[l] += r.exec_mean_s;
+      if (r && !r.skipped) {
+        totals[l] += r.exec_mean_s;
+      }
     }
     const w = winner(b);
-    if (w === 'go') goWins++;
-    else if (w === 'cpp') cppWins++;
+    if (w === 'go') {
+      goWins++;
+    }
+    else if (w === 'cpp') {
+      cppWins++;
+    }
     else pyWins++;
   }
   const pyT = totals.python;
@@ -690,10 +734,18 @@ function renderTable() {
     const cppSpeedup = (pyT && cppT) ? pyT / cppT : null;
 
     function speedupClass(v) {
-      if (!v) return 'td-skip';
-      if (v >= 10) return 'td-speedup fast';
-      if (v >= 2)  return 'td-speedup med';
-      if (v < 1)   return 'td-speedup slow';
+      if (!v) {
+        return 'td-skip';
+      }
+      if (v >= 10) {
+        return 'td-speedup fast';
+      }
+      if (v >= 2) {
+        return 'td-speedup med';
+      }
+      if (v < 1) {
+        return 'td-speedup slow';
+      }
       return 'td-speedup';
     }
 
@@ -710,12 +762,13 @@ function renderTable() {
   }).join('');
 }
 
-// ── Controls ───────────────────────────────────────────────────────────────────
 function setMetric(btn, m) {
   metric = m;
   document.querySelectorAll('[data-metric]').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  if (!DATA) return;
+  if (!DATA) {
+    return;
+  }
   renderOverview();
   renderGrid();
 }
@@ -726,10 +779,16 @@ function setScale(btn, s) {
     if (b.getAttribute('onclick')?.includes('setScale')) b.classList.remove('active');
   });
   btn.classList.add('active');
-  if (!DATA) return;
+  if (!DATA) {
+    return;
+  }
   renderOverview();
   renderGrid();
 }
+
+document.getElementById('filter-input').addEventListener("filterInput", e => {
+  console.log(e.target.value);
+});
 </script>
 </body>
 </html>

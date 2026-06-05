@@ -45,6 +45,7 @@ type BenchmarkResult struct {
 	Error      string    `json:"error"`
 	Skipped    bool      `json:"skipped"`
 	SkipReason string    `json:"skip_reason"`
+	Internal   bool		 `json:"internal"`
 }
 
 type Benchmark struct {
@@ -55,16 +56,16 @@ type Benchmark struct {
 }
 
 var benchmarks = []Benchmark{
-	{"fibonacci_iter", "fibonacci",      "cpu", 		"Fibonacci(40) iterative"},
-	{"fibonacci_rec",  "fibRecursive",   "cpu", 		"Fibonacci(42) recursive"},
-	{"prime_sieve",	   "primeSieve",     "cpu", 		"Sieve of Eratosthenes"},
-	{"matrix_mul",	   "matrixMultiply", "cpu", 		"400x400 matrix multiplication"},
-	{"sort_ints",	   "sorting", 	     "cpu", 		"Sort integers"},
-	{"json_roundtrip", "jsonParser",     "data", 	    "JSON encode/decode"},
-	{"string_build",   "stringBuilder",  "data",        "String builder"},
-	{"hashmap",	       "hashmap",        "data",        "Hashmap benchmark"},
-	{"file_io",		   "fileIO", 		 "io",          "File IO"},
-	{"concurrency",    "concurrency",    "concurrency", "Concurrency benchmark"},
+	{"concurrency",    			  "concurrency",    		  "concurrency", "Concurrency benchmark"},
+	{"fibonacci_iter", 			  "fibonacci",      		  "cpu", 		 "Fibonacci(40) iterative"},
+	{"fibonacci_rec",  			  "fibRecursive",   		  "cpu", 		 "Fibonacci(42) recursive"},
+	{"file_io",		   			  "fileIO", 				  "io",          "File IO"},
+	{"hashmap",	       			  "hashmap",        		  "data",        "Hashmap benchmark"},
+	{"json_roundtrip", 			  "jsonParser",     		  "data", 	     "JSON encode/decode"},
+	{"matrix_mul",	   			  "matrixMultiply", 		  "cpu", 		 "400x400 matrix multiplication"},
+	{"prime_sieve",	   			  "primeSieve",     		  "cpu", 		 "Sieve of Eratosthenes"},
+	{"sort_ints",	   			  "sorting", 	    		  "cpu", 		 "Sort integers"},
+	{"string_build_multi_lang",   "stringBuilding/multiLang", "data",        "String builder"},
 }
 
 func runCmd(timeout int, cwd string, cmd string, args ...string) RunResult {
@@ -94,14 +95,14 @@ func runCmd(timeout int, cwd string, cmd string, args ...string) RunResult {
 	return RunResult{0, strings.TrimSpace(string(out)), "", elapsed}
 }
 
-func compileGo(src, out string, timeout int, goBin string) (bool, float64, string) {
+func compileGo(src, out string, timeout int, goBin string) (float64, string, bool) {
 	r := runCmd(timeout, "", goBin, "build", "-o", out, src)
-	return r.ExitCode == 0, r.WallSecond, r.Stderr
+	return r.WallSecond, r.Stderr, r.ExitCode == 0
 }
 
-func compileCpp(src, out string, timeout int, cpp string) (bool, float64, string) {
+func compileCpp(src, out string, timeout int, cpp string) (float64, string, bool) {
 	r := runCmd(timeout, "", cpp, "-O2", "-std=c++17", "-pthread", "-o", out, src)
-	return r.ExitCode == 0, r.WallSecond, r.Stderr
+	return r.WallSecond, r.Stderr, r.ExitCode == 0
 }
 
 func runBenchmark(name, lang, src string, runs, timeout int, goBin, cppBin string) BenchmarkResult {
@@ -121,7 +122,7 @@ func runBenchmark(name, lang, src string, runs, timeout int, goBin, cppBin strin
 			if runtime.GOOS == "windows" {
 				binary += ".exe"
 			}
-			ok, ct, ce := compileGo(src, binary, timeout, goBin)
+			ct, ce, ok := compileGo(src, binary, timeout, goBin)
 			res.CompileS = &ct
 			if !ok {
 				res.Skipped = true
@@ -134,7 +135,7 @@ func runBenchmark(name, lang, src string, runs, timeout int, goBin, cppBin strin
 			if runtime.GOOS == "windows" {
 				binary += ".exe"
 			}
-			ok, ct, ce := compileCpp(src, binary, timeout, cppBin)
+			ct, ce, ok := compileCpp(src, binary, timeout, cppBin)
 			res.CompileS = &ct
 			if !ok {
 				res.Skipped = true

@@ -51,7 +51,7 @@ benchmarks/
     ├── matrixMultiply/  #
     ├── primeSieve/      #
     ├── sorting/         #
-    ├── stringBuilder/   #
+    ├── stringBuilding/  #
 ┌── build/               # compiled binaries (auto-created)
 └── results/             # JSON output per run (auto-created)
 ```
