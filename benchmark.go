@@ -25,6 +25,18 @@ var (
 	PY_NAME  = "pythonSrc.py"
 )
 
+var (
+	runs 		= flag.Int	 ("runs"        , 3    , "")
+	timeout 	= flag.Int	 ("timeout"     , 180  , "")
+	filter 		= flag.String("filter"      , ""   , "")
+	noGo 		= flag.Bool  ("no-go"       , false, "")
+	noCpp 		= flag.Bool  ("no-cpp"      , false, "")
+	noPy 		= flag.Bool  ("no-python"   , false, "")
+	output 		= flag.String("output"	     , ""   , "")
+	cppCompiler = flag.String("cpp-compiler", "g++", "")
+	goCompiler 	= flag.String("go-compiler" , "go" , "")
+)
+
 type RunResult struct {
 	ExitCode   int     `json:"exit_code"`
 	Stdout     string  `json:"stdout"`
@@ -105,17 +117,52 @@ func compileCpp(src, out string, timeout int, cpp string) (float64, string, bool
 	return r.WallSecond, r.Stderr, r.ExitCode == 0
 }
 
-func runBenchmark(name, lang, src string, runs, timeout int, goBin, cppBin string) BenchmarkResult {
+func skipLang(lang string) bool {
+	switch lang {
+		case "go":
+			return *noGo
+		case "cpp":
+			return *noCpp
+		case "python":
+			return *noPy
+		default:
+			return false
+	}
+}
+
+func mapExt2Lang(path string) string {
+	switch filepath.Ext(path) {
+		case ".go":
+			return "go"
+		case ".cpp":
+			return "cpp"
+		case ".py":
+			return "python"
+		default:
+			return "idk"
+	}
+}
+
+func runBenchmark(name, src string, runs, timeout int, goBin, cppBin string) BenchmarkResult {	
+	lang := mapExt2Lang(src)
+	var binary string
+	sum := 0.0
+
 	res := BenchmarkResult{Name: name, Language: lang}
+
+	if skipLang(lang) {
+		res.Skipped = true
+		res.SkipReason = "filtered lang: " + lang
+		goto finishBenchmark
+	}
 
 	if _, err := os.Stat(src); err != nil {
 		res.Skipped = true
 		res.SkipReason = "source not found: " + src
-		return res
+		goto finishBenchmark
 	}
 
-	var binary string
-
+	
 	switch lang {
 		case "go":
 			binary = filepath.Join(BUILD_DIR, name+"_go")
@@ -141,7 +188,7 @@ func runBenchmark(name, lang, src string, runs, timeout int, goBin, cppBin strin
 				res.Skipped = true
 				res.Error = ce
 				res.SkipReason = ce
-				return res
+				goto finishBenchmark
 			}
 		default:
 			v := 0.0
@@ -161,7 +208,7 @@ func runBenchmark(name, lang, src string, runs, timeout int, goBin, cppBin strin
 			res.Skipped = true
 			res.Error = r.Stderr
 			res.SkipReason = r.Stderr
-			return res
+			goto finishBenchmark
 		}
 
 		res.RunsS = append(res.RunsS, r.WallSecond)
@@ -170,7 +217,6 @@ func runBenchmark(name, lang, src string, runs, timeout int, goBin, cppBin strin
 		}
 	}
 
-	sum := 0.0
 	res.ExecMinS = math.MaxFloat64
 	for _, t := range res.RunsS {
 		sum += t
@@ -185,35 +231,20 @@ func runBenchmark(name, lang, src string, runs, timeout int, goBin, cppBin strin
 		res.ExecMeanS = sum / float64(len(res.RunsS))
 	}
 	res.TotalS = *res.CompileS + res.ExecMeanS
+
+finishBenchmark:
+	fmt.Printf("  %-7s skipped=%v exec=%.4fs\n", lang, res.Skipped, res.ExecMeanS)
 	return res
 }
 
-func main() {
-	runs 		:= flag.Int	  ("runs"        , 3    , "")
-	timeout 	:= flag.Int	  ("timeout"     , 180  , "")
-	filter 		:= flag.String("filter"      , ""   , "")
-	noGo 		:= flag.Bool  ("no-go"       , false, "")
-	noCpp 		:= flag.Bool  ("no-cpp"      , false, "")
-	noPy 		:= flag.Bool  ("no-python"   , false, "")
-	output 		:= flag.String("output"	     , ""   , "")
-	cppCompiler := flag.String("cpp-compiler", "g++", "")
-	goCompiler 	:= flag.String("go-compiler" , "go" , "")
+func init() {
 	flag.Parse()
 
 	_ = os.MkdirAll(BUILD_DIR, 0755)
 	_ = os.MkdirAll(RESULTS, 0755)
+}
 
-	var langs []string
-	if !*noGo {
-		langs = append(langs, "go")
-	}
-	if !*noCpp {
-		langs = append(langs, "cpp")
-	}
-	if !*noPy {
-		langs = append(langs, "python")
-	}
-
+func main() {
 	var results []BenchmarkResult
 	start := time.Now()
 
@@ -223,27 +254,35 @@ func main() {
 		}
 
 		srcBase := filepath.Join(SRC, b.SrcPath)
-		srcs := map[string]string{
-			"go": filepath.Join(srcBase, GO_NAME),
-			"cpp": filepath.Join(srcBase, CPP_NAME),
-			"python": filepath.Join(srcBase, PY_NAME),
+		var srcs []string
+		err := filepath.Walk(
+			srcBase,
+			func(path string, f os.FileInfo, err error) error {
+				if filepath.Ext(path) == "" {
+					return err
+				}
+				srcs = append(srcs, path)
+				return err
+			})
+		if err != nil {
+			fmt.Println("problem with reading ", strings.ToUpper(b.Category)," files: ", err)
+			continue
 		}
 
 		fmt.Printf("[%s] %s\n", strings.ToUpper(b.Category), b.Name)
 
-		for _, lang := range langs {
-			r := runBenchmark(b.Name, lang, srcs[lang], *runs, *timeout, *goCompiler, *cppCompiler)
+		for _, src := range srcs {
+			r := runBenchmark(b.Name, src, *runs, *timeout, *goCompiler, *cppCompiler)
 			results = append(results, r)
-			fmt.Printf("  %-7s skipped=%v exec=%.4fs\n", lang, r.Skipped, r.ExecMeanS)
 		}
 	}
 
 	payload := map[string]any{
-		"timestamp": time.Now().Unix(),
+		"timestamp":		  time.Now().Unix(),
 		"runs_per_benchmark": *runs,
-		"timeout_s": *timeout,
-		"total_wall_s": time.Since(start).Seconds(),
-		"results": results,
+		"timeout_s":		  *timeout,
+		"total_wall_s":		  time.Since(start).Seconds(),
+		"results":			  results,
 	}
 
 	data, _ := json.MarshalIndent(payload, "", "  ")
