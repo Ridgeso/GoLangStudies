@@ -21,39 +21,39 @@ go run benchmark.go --output out.json      # custom results path
 go run benchmark.go --cpp-compiler=clang++ # change c++ compiler to custom
 ```
 
-## Benchmarks
+## Some Benchmarks
 
-| Name | What it tests |
-|---|---|
-| `fibonacci_iter` | Iterative Fibonacci(40) |
-| `fibonacci_rec` | Recursive Fibonacci(42) — exponential call tree |
-| `prime_sieve` | Sieve of Eratosthenes up to 5 million |
-| `matrix_mul` | 400×400 matrix multiplication |
-| `sort_ints` | Sort 10 million integers |
-| `json_roundtrip` | Encode + decode 200,000 objects |
-| `string_build` | Build string from 500,000 tokens |
-| `hashmap` | Insert + read 2 million key-value pairs |
-| `file_io` | Write then read 1 million lines |
-| `concurrency` | 1,000 goroutines / threads |
+| Name             | What it tests                                   |
+|------------------|-------------------------------------------------|
+| `concurrency`    | 1,000 goroutines / threads                      |
+| `fibonacci_iter` | Iterative Fibonacci(40)                         |
+| `fibonacci_rec`  | Recursive Fibonacci(42) — exponential call tree |
+| `file_io`        | Write then read 1 million lines                 |
+| `hashmap`        | Insert + read 2 million key-value pairs         |
+| `json_roundtrip` | Encode + decode 200,000 objects                 |
+| `matrix_mul`     | 400×400 matrix multiplication                   |
+| `prime_sieve`    | Sieve of Eratosthenes up to 5 million           |
+| `sort_ints`      | Sort 10 million integers                        |
+| `string_build`   | Build string from 500,000 tokens                |
 
 ## Structure
 
 ```
 benchmarks/
-┌── benchmark.go         # runner — the only script you need
-└── tests/               # sources of test examples
-    ├── concurrency/     #
-    ├── fibonacci/       #
-    ├── fibRecursive/    #
-    ├── fileIO/          #
-    ├── hashmap/         #
-    ├── jsonParser/      #
-    ├── matrixMultiply/  #
-    ├── primeSieve/      #
-    ├── sorting/         #
-    ├── stringBuilding/  #
-┌── build/               # compiled binaries (auto-created)
-└── results/             # JSON output per run (auto-created)
+┌── benchmark.go                  # runner — the only script you need
+└── tests/                        # sources of test examples
+    ├── concurrency/              #
+    ├── fibonacci/                #
+    ├── fibRecursive/             #
+    ├── fileIO/                   #
+    ├── hashmap/                  #
+    ├── jsonParser/               #
+    ├── matrixMultiply/           #
+    ├── primeSieve/               #
+    ├── sorting/                  #
+    ├── stringBuilding/variants/  #
+┌── build/                        # compiled binaries (auto-created)
+└── results/                      # JSON output per run (auto-created)
 ```
 
 ## Results

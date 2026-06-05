@@ -58,7 +58,7 @@ type TestResult struct {
 type BenchmarkResult struct {
 	Name       string    	`json:"name"`
 	Internal   bool		 	`json:"internal"`
-	Category   string	 `json:"category"`
+	Category   string	 	`json:"category"`
 	Results    []TestResult `json:"results"`
 }
 
@@ -67,19 +67,21 @@ type Benchmark struct {
 	SrcPath     string
 	Category    string
 	Description string
+	Internal	bool
 }
 
 var benchmarks = []Benchmark{
-	{"concurrency",    			  "concurrency",    		  "concurrency", "Concurrency benchmark"},
-	{"fibonacci_iter", 			  "fibonacci",      		  "cpu", 		 "Fibonacci(40) iterative"},
-	{"fibonacci_rec",  			  "fibRecursive",   		  "cpu", 		 "Fibonacci(40) recursive"},
-	{"file_io",		   			  "fileIO", 				  "io",          "File IO"},
-	{"hashmap",	       			  "hashmap",        		  "data",        "Hashmap benchmark"},
-	{"json_roundtrip", 			  "jsonParser",     		  "data", 	     "JSON encode/decode"},
-	{"matrix_mul",	   			  "matrixMultiply", 		  "cpu", 		 "400x400 matrix multiplication"},
-	{"prime_sieve",	   			  "primeSieve",     		  "cpu", 		 "Sieve of Eratosthenes"},
-	{"sort_ints",	   			  "sorting", 	    		  "cpu", 		 "Sort integers"},
-	{"string_build_multi_lang",   "stringBuilding/multiLang", "data",        "String builder"},
+	{"concurrency",    			  "concurrency",    		  "concurrency", "Concurrency benchmark", 		  false},
+	{"fibonacci_iter", 			  "fibonacci",      		  "cpu", 		 "Fibonacci(40) iterative", 	  false},
+	{"fibonacci_rec",  			  "fibRecursive",   		  "cpu", 		 "Fibonacci(40) recursive", 	  false},
+	{"file_io",		   			  "fileIO", 				  "io",          "File IO", 					  false},
+	{"hashmap",	       			  "hashmap",        		  "data",        "Hashmap benchmark", 			  false},
+	{"json_roundtrip", 			  "jsonParser",     		  "data", 	     "JSON encode/decode", 			  false},
+	{"matrix_mul",	   			  "matrixMultiply", 		  "cpu", 		 "400x400 matrix multiplication", false},
+	{"prime_sieve",	   			  "primeSieve",     		  "cpu", 		 "Sieve of Eratosthenes", 		  false},
+	{"sort_ints",	   			  "sorting", 	    		  "cpu", 		 "Sort integers", 				  false},
+	{"string_build_multi_lang",   "stringBuilding/multiLang", "data",        "String building", 			  false},
+	{"string_build_variants",     "stringBuilding/variants",  "data",        "Variations on string building", true},
 }
 
 func runCmd(timeout int, cwd string, cmd string, args ...string) RunResult {
@@ -257,7 +259,7 @@ finishBenchmark:
 func runBenchmark(b Benchmark, runs, timeout int) BenchmarkResult {	
 	res := BenchmarkResult{
 		Name: b.Name,
-		Internal: false,
+		Internal: b.Internal,
 		Category: b.Category,
 		Results: make([]TestResult, 0),
 	}

@@ -385,6 +385,11 @@
         <button class="ctrl-btn active" onclick="setScale(this,'linear')">linear</button>
         <button class="ctrl-btn" onclick="setScale(this,'logarithmic')">log</button>
       </div>
+      <div class="divider"></div>
+      <span class="ctrl-label">Show Tests:</span>
+      <div class="btn-group">
+        <button class="ctrl-btn" id="switch-tests" onclick="switchInternal(this)">Internal</button>
+      </div>
     </div>
     <div>
       <span class="ctrl-label">FILTER TESTS</span>
@@ -434,6 +439,7 @@ let DATA = null;
 let metric = 'exec_mean_s';
 let scaleType = 'linear';
 let filterQuery = '';
+let showInternal = false;
 let overviewChart = null;
 const miniCharts = {};
 
@@ -575,6 +581,16 @@ function loadDemo() {
         ],
       },
       {
+        name:'string_build_variants',
+        internal:true,
+        category:"data",
+        results:[
+          {test_name:"Slow",        language:'go', compile_s:0.146499, exec_mean_s:0.067314, exec_min_s:0.066780, exec_max_s:0.067848, total_s:0.213813, skipped:false},
+          {test_name:"Unsafe",      language:'go', compile_s:0.296533, exec_mean_s:0.014244, exec_min_s:0.013569, exec_max_s:0.014920, total_s:0.310777, skipped:false},
+          {test_name:"With_Slices", language:'go', compile_s:0,        exec_mean_s:0.103243, exec_min_s:0.101246, exec_max_s:0.105241, total_s:0.103243, skipped:false},
+        ],
+      },
+      {
         name:'hashmap',
         internal:false,
         category:"data",
@@ -646,20 +662,19 @@ function winner(bench) {
 
 function renderSummary() {
   const benches = Object.keys(DATA);
-  const totals = { go:0, cpp:0, python:0 };
+  const totals = { go:0, "c++":0, python:0 };
   let goWins = 0, cppWins = 0, pyWins = 0;
   for (const b of benches) {
-    for (const l of ['go','cpp','python']) {
-      const r = DATA[b]?.[l];
-      if (r && !r.skipped) {
-        totals[l] += r.exec_mean_s;
+    for (const r of DATA[b].results) {
+      if (!r.skipped) {
+        totals[r.language] += r.exec_mean_s;
       }
     }
     const w = winner(b);
     if (w === 'go') {
       goWins++;
     }
-    else if (w === 'cpp') {
+    else if (w === 'c++') {
       cppWins++;
     }
     else pyWins++;
@@ -667,10 +682,10 @@ function renderSummary() {
   const pyT = totals.python;
   const cells = [
     { label:'go total exec',     value: fmtTime(totals.go),              cls:'go'  },
-    { label:'c++ total exec',    value: fmtTime(totals.cpp),             cls:'cpp' },
+    { label:'c++ total exec',    value: fmtTime(totals["c++"]),             cls:'cpp' },
     { label:'python total exec', value: fmtTime(totals.python),          cls:'python' },
     { label:'go avg speedup',    value: (pyT/totals.go).toFixed(1)+'×',  cls:'go' },
-    { label:'c++ avg speedup',   value: (pyT/totals.cpp).toFixed(1)+'×', cls:'cpp' },
+    { label:'c++ avg speedup',   value: (pyT/totals["c++"]).toFixed(1)+'×', cls:'cpp' },
     { label:'benchmarks',        value: benches.length,                  cls:'neutral' },
   ];
   document.getElementById('summary-strip').innerHTML = cells.map(c =>
@@ -680,7 +695,12 @@ function renderSummary() {
 
 function filteredBenches() {
   const q = filterQuery.trim().toLowerCase();
-  return Object.keys(DATA).filter(b => !q || b.toLowerCase().includes(q));
+  const f = b => {
+    const filterByText = !q || b.toLowerCase().includes(q);
+    const filterByInternal = DATA[b].internal === showInternal;
+    return filterByText && filterByInternal
+  }
+  return Object.keys(DATA).filter(f);
 }
 
 function getOverviewDatasets() {
@@ -872,6 +892,19 @@ function setScale(btn, s) {
   }
   renderOverview();
   renderGrid();
+}
+
+function switchInternal(btn) {
+  const internal = "Internal"
+  const oposite = "Oposite"
+  showInternal = btn.textContent === internal
+  btn.textContent = btn.textContent === internal ? oposite : internal;
+  if (!DATA) {
+    return;
+  }
+  renderOverview();
+  renderGrid();
+  renderTable();
 }
 
 document.getElementById('filter-input').addEventListener('input', e => {
