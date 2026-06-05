@@ -834,7 +834,7 @@ function renderGrid() {
 
     const statsHtml = results.map((r, ri) => {
       const v  = !r.skipped ? fmtTime(r.exec_mean_s) : '—';
-      const lbl = labelFor(r);
+      const lbl = labelFor(r).replace(/_/g, ' \u200b');
       const col = colorFor(b, r);
       const ci  = DATA[b].results.indexOf(r) % PALETTE.length;
 
@@ -863,7 +863,7 @@ function renderGrid() {
     card.style.animationDelay = (idx * 30) + 'ms';
     card.innerHTML = `
       <div class="bench-card-header">
-        <span class="bench-name">${b.replace(/_/g,'_\u200b')}</span>
+        <span class="bench-name">${b.replace(/_/g, '_\u200b')}</span>
         <span class="bench-category">${cat}</span>
         ${wBadge}
       </div>
@@ -877,7 +877,7 @@ function renderGrid() {
     miniCharts[b] = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: results.map(r => labelFor(r)),
+        labels: results.map(r => labelFor(r).replace(/_/g, ' \u200b')),
         datasets: [{
           data: results.map(r => r.skipped ? 0 : parseFloat((r.exec_mean_s||0).toFixed(6))),
           backgroundColor: results.map(r => colorFor(b, r, '70')),

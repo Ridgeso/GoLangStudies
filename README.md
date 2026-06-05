@@ -31,10 +31,8 @@ go run benchmark.go --cpp-compiler=clang++ # change c++ compiler to custom
 | `file_io`        | Write then read 1 million lines                 |
 | `hashmap`        | Insert + read 2 million key-value pairs         |
 | `json_roundtrip` | Encode + decode 200,000 objects                 |
-| `matrix_mul`     | 400×400 matrix multiplication                   |
-| `prime_sieve`    | Sieve of Eratosthenes up to 5 million           |
-| `sort_ints`      | Sort 10 million integers                        |
 | `string_build`   | Build string from 500,000 tokens                |
+| `...`            | Etc                                             |
 
 ## Structure
 
@@ -48,10 +46,8 @@ benchmarks/
     ├── fileIO/                   #
     ├── hashmap/                  #
     ├── jsonParser/               #
-    ├── matrixMultiply/           #
-    ├── primeSieve/               #
-    ├── sorting/                  #
     ├── stringBuilding/variants/  #
+    ├── ...
 ┌── build/                        # compiled binaries (auto-created)
 └── results/                      # JSON output per run (auto-created)
 ```

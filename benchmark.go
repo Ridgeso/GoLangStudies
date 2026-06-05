@@ -71,17 +71,25 @@ type Benchmark struct {
 }
 
 var benchmarks = []Benchmark{
-	{"concurrency",    			  "concurrency",    		  "concurrency", "Concurrency benchmark", 		  false},
-	{"fibonacci_iter", 			  "fibonacci",      		  "cpu", 		 "Fibonacci(40) iterative", 	  false},
-	{"fibonacci_rec",  			  "fibRecursive",   		  "cpu", 		 "Fibonacci(40) recursive", 	  false},
-	{"file_io",		   			  "fileIO", 				  "io",          "File IO", 					  false},
-	{"hashmap",	       			  "hashmap",        		  "data",        "Hashmap benchmark", 			  false},
-	{"json_roundtrip", 			  "jsonParser",     		  "data", 	     "JSON encode/decode", 			  false},
-	{"matrix_mul",	   			  "matrixMultiply", 		  "cpu", 		 "400x400 matrix multiplication", false},
-	{"prime_sieve",	   			  "primeSieve",     		  "cpu", 		 "Sieve of Eratosthenes", 		  false},
-	{"sort_ints",	   			  "sorting", 	    		  "cpu", 		 "Sort integers", 				  false},
-	{"string_build_multi_lang",   "stringBuilding/multiLang", "data",        "String building", 			  false},
-	{"string_build_variants",     "stringBuilding/variants",  "data",        "Variations on string building", true},
+	{"concurrency_multi_lang",    "concurrency/multilang",              "concurrency",      "Concurrency benchmark", 		            false},
+	{"concurrency_counters",      "concurrency/counters",               "concurrency",      "Concurrency on Counter", 		            true },
+	{"concurrency_scheduler",     "concurrency/multi_tasking",          "concurrency",      "Concurrency on Task scheduling",           true },
+	{"fibonacci_iter", 			  "fibonacci/iterative",	            "cpu",              "Fibonacci(40) iterative", 	                false},
+	{"fibonacci_rec",  			  "fibonacci/recursive", 	            "cpu",              "Fibonacci(40) recursive", 	                false},
+	{"file_io",		   			  "fileIO", 				            "io",               "File IO", 					                false},
+	{"hashmap",	       			  "hashmap",        		            "data",             "Hashmap benchmark", 			            false},
+	{"json_parsing",              "json_parser/multilang",              "data",             "JSON encode/decode", 			            false},
+	{"matrix_mul",	   			  "matrixMultiply", 		            "cpu",              "400x400 matrix multiplication",            false},
+	{"prime_sieve",	   			  "primeSieve",     		            "cpu",              "Sieve of Eratosthenes", 		            false},
+	{"slice_append",              "memory/slice_append",                "memory",           "Appending to slices different ways",       true },
+	{"struct_padding",            "memory/struct_padding",              "memory",           "Padded vs Packed struct",                  true },
+	{"heap_vs_stack",             "memory/heap_vs_stack",               "memory",           "Speed between stack and pointer alloc",    true },
+	{"sorting_multi_lang",        "algorithms/sorting/multilang",       "cpu",              "Sort in different languages",              false},
+	{"sorting_ints",              "algorithms/sorting/ints",            "cpu",              "Sort integers multiple ways",              true },
+	{"searching_multi_lang",      "algorithms/searching/multilang",     "cpu",              "Searching in different languages",         false},
+	{"searching_variants",        "algorithms/searching/variants",      "cpu",              "Searching algorithms",                     true },
+	{"string_build_multi_lang",   "stringBuilding/multilang",           "data",             "String building", 			                false},
+	{"string_build_variants",     "stringBuilding/variants",            "data",             "Variations on string building",            true },
 }
 
 func runCmd(timeout int, cwd string, cmd string, args ...string) RunResult {
