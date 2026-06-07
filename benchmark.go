@@ -36,32 +36,32 @@ var (
 )
 
 const (
-	esc   = "\033["
-	reset = esc + "0m"
-	bold  = esc + "1m"
-	dim   = esc + "2m"
+    esc   = "\033["
+    reset = esc + "0m"
+    bold  = esc + "1m"
+    dim   = esc + "2m"
 
-	fgBlack   = esc + "30m"
-	fgRed     = esc + "31m"
-	fgGreen   = esc + "32m"
-	fgYellow  = esc + "33m"
-	fgBlue    = esc + "34m"
-	fgMagenta = esc + "35m"
-	fgCyan    = esc + "36m"
-	fgWhite   = esc + "37m"
+    fgBlack   = esc + "30m"
+    fgRed     = esc + "31m"
+    fgGreen   = esc + "32m"
+    fgYellow  = esc + "33m"
+    fgBlue    = esc + "34m"
+    fgMagenta = esc + "35m"
+    fgCyan    = esc + "36m"
+    fgWhite   = esc + "37m"
 
-	fgBrightBlack   = esc + "90m"
-	fgBrightRed     = esc + "91m"
-	fgBrightGreen   = esc + "92m"
-	fgBrightYellow  = esc + "93m"
-	fgBrightBlue    = esc + "94m"
-	fgBrightMagenta = esc + "95m"
-	fgBrightCyan    = esc + "96m"
-	fgBrightWhite   = esc + "97m"
+    fgBrightBlack   = esc + "90m"
+    fgBrightRed     = esc + "91m"
+    fgBrightGreen   = esc + "92m"
+    fgBrightYellow  = esc + "93m"
+    fgBrightBlue    = esc + "94m"
+    fgBrightMagenta = esc + "95m"
+    fgBrightCyan    = esc + "96m"
+    fgBrightWhite   = esc + "97m"
 
-	bgBlue = esc + "44m"
+    bgBlue = esc + "44m"
 
-	clearLine = "\r" + esc + "2K"
+    clearLine = "\r" + esc + "2K"
 )
 
 var colorEnabled = true
@@ -348,33 +348,11 @@ type BenchmarkResult struct {
 }
 
 type Benchmark struct {
-    Name        string
-    SrcPath     string
-    Category    string
-    Description string
-    Internal    bool
-}
-
-var benchmarks = []Benchmark{
-    {"concurrency_multi_lang",    "concurrency/multilang",              "concurrency",      "Concurrency benchmark",                    false},
-    {"concurrency_counters",      "concurrency/counters",               "concurrency",      "Concurrency on Counter",                   true },
-    {"concurrency_scheduler",     "concurrency/multi_tasking",          "concurrency",      "Concurrency on Task scheduling",           true },
-    {"fibonacci_iter",            "fibonacci/iterative",                "cpu",              "Fibonacci(40) iterative",                  false},
-    {"fibonacci_rec",             "fibonacci/recursive",                "cpu",              "Fibonacci(40) recursive",                  false},
-    {"file_io",                   "fileIO",                             "io",               "File IO",                                  false},
-    {"hashmap",                   "hashmap",                            "data",             "Hashmap benchmark",                        false},
-    {"json_parsing",              "json_parser/multilang",              "data",             "JSON encode/decode",                       false},
-    {"matrix_mul",                "matrixMultiply",                     "cpu",              "400x400 matrix multiplication",            false},
-    {"prime_sieve",               "primeSieve",                         "cpu",              "Sieve of Eratosthenes",                    false},
-    {"slice_append",              "memory/slice_append",                "memory",           "Appending to slices different ways",       true },
-    {"struct_padding",            "memory/struct_padding",              "memory",           "Padded vs Packed struct",                  true },
-    {"heap_vs_stack",             "memory/heap_vs_stack",               "memory",           "Speed between stack and pointer alloc",    true },
-    {"sorting_multi_lang",        "algorithms/sorting/multilang",       "cpu",              "Sort in different languages",              false},
-    {"sorting_ints",              "algorithms/sorting/ints",            "cpu",              "Sort integers multiple ways",              true },
-    {"searching_multi_lang",      "algorithms/searching/multilang",     "cpu",              "Searching in different languages",         false},
-    {"searching_variants",        "algorithms/searching/variants",      "cpu",              "Searching algorithms",                     true },
-    {"string_build_multi_lang",   "stringBuilding/multilang",           "data",             "String building",                          false},
-    {"string_build_variants",     "stringBuilding/variants",            "data",             "Variations on string building",            true },
+    Name        string  `json:"name"`
+    SrcPath     string  `json:"src_path"`
+    Category    string  `json:"category"`
+    Description string  `json:"description"`
+    Internal    bool    `json:"internal"`
 }
 
 func runCmd(cwd string, cmd string, args ...string) RunResult {
@@ -585,7 +563,28 @@ func init() {
     _ = os.MkdirAll(RESULTS, 0755)
 }
 
+func loadBenchmarks() ([]Benchmark, error) {
+    var benchmarks []Benchmark
+    data, err := os.ReadFile("benchmarks.json")
+    if err != nil {
+        goto errLoading
+    }
+    err = json.Unmarshal(data, &benchmarks)
+    if err != nil {
+        goto errLoading
+    }
+    return benchmarks, nil
+errLoading:
+    return nil, err
+}
+
 func main() {
+    benchmarks, err := loadBenchmarks()
+    if err != nil {
+        fmt.Printf("%s loading benchmarks: %v\n", colored("ERROR", bold, fgBrightRed), err)
+        return
+    }
+
     var active []Benchmark
     for _, b := range benchmarks {
         if *filter == "" || strings.Contains(strings.ToLower(b.Name), strings.ToLower(*filter)) {

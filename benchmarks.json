@@ -1,0 +1,135 @@
+[
+  {
+    "name": "concurrency_multi_lang",
+    "src_path": "concurrency/multilang",
+    "category": "concurrency",
+    "description": "Concurrency benchmark",
+    "internal": false
+  },
+  {
+    "name": "concurrency_counters",
+    "src_path": "concurrency/counters",
+    "category": "concurrency",
+    "description": "Concurrency on Counter",
+    "internal": true
+  },
+  {
+    "name": "concurrency_scheduler",
+    "src_path": "concurrency/multi_tasking",
+    "category": "concurrency",
+    "description": "Concurrency on Task scheduling",
+    "internal": true
+  },
+  {
+    "name": "fibonacci_iter",
+    "src_path": "fibonacci/iterative",
+    "category": "cpu",
+    "description": "Fibonacci(40) iterative",
+    "internal": false
+  },
+  {
+    "name": "fibonacci_rec",
+    "src_path": "fibonacci/recursive",
+    "category": "cpu",
+    "description": "Fibonacci(40) recursive",
+    "internal": false
+  },
+  {
+    "name": "file_io",
+    "src_path": "fileIO",
+    "category": "io",
+    "description": "File IO",
+    "internal": false
+  },
+  {
+    "name": "hashmap",
+    "src_path": "hashmap",
+    "category": "data",
+    "description": "Hashmap benchmark",
+    "internal": false
+  },
+  {
+    "name": "json_parsing",
+    "src_path": "json_parser/multilang",
+    "category": "data",
+    "description": "JSON encode/decode",
+    "internal": false
+  },
+  {
+    "name": "matrix_mul",
+    "src_path": "matrixMultiply",
+    "category": "cpu",
+    "description": "400x400 matrix multiplication",
+    "internal": false
+  },
+  {
+    "name": "prime_sieve",
+    "src_path": "primeSieve",
+    "category": "cpu",
+    "description": "Sieve of Eratosthenes",
+    "internal": false
+  },
+  {
+    "name": "slice_append",
+    "src_path": "memory/slice_append",
+    "category": "memory",
+    "description": "Appending to slices different ways",
+    "internal": true
+  },
+  {
+    "name": "struct_padding",
+    "src_path": "memory/struct_padding",
+    "category": "memory",
+    "description": "Padded vs Packed struct",
+    "internal": true
+  },
+  {
+    "name": "heap_vs_stack",
+    "src_path": "memory/heap_vs_stack",
+    "category": "memory",
+    "description": "Speed between stack and pointer alloc",
+    "internal": true
+  },
+  {
+    "name": "sorting_multi_lang",
+    "src_path": "algorithms/sorting/multilang",
+    "category": "cpu",
+    "description": "Sort in different languages",
+    "internal": false
+  },
+  {
+    "name": "sorting_ints",
+    "src_path": "algorithms/sorting/ints",
+    "category": "cpu",
+    "description": "Sort integers multiple ways",
+    "internal": true
+  },
+  {
+    "name": "searching_multi_lang",
+    "src_path": "algorithms/searching/multilang",
+    "category": "cpu",
+    "description": "Searching in different languages",
+    "internal": false
+  },
+  {
+    "name": "searching_variants",
+    "src_path": "algorithms/searching/variants",
+    "category": "cpu",
+    "description": "Searching algorithms",
+    "internal": true
+  },
+  {
+    "name": "string_build_multi_lang",
+    "src_path": "stringBuilding/multilang",
+    "category": "data",
+    "description": "String building",
+    "internal": false
+  },
+  {
+    "name": "string_build_variants",
+    "src_path": "stringBuilding/variants",
+    "category": "data",
+    "description": "Variations on string building",
+    "internal": true
+  }
+]

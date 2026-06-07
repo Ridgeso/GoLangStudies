@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Benchmark Presentation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080b0f; --surface:#0e1318; --panel:#0c1117;
+  --border:#1b2530; --border2:#243040;
+  --text:#dde4ed; --muted:#5a6a7a; --dim:#2e3e50;
+  --go:#00d2ff; --cpp:#6ea8e8; --py:#ffd35c;
+  --cat-cpu:#ff7070; --cat-data:#5fe89a; --cat-io:#ffd35c; --cat-concurrency:#c984f5;
+  --mono:'Space Mono',monospace; --display:'Syne',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;line-height:1.6;min-height:100vh}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* Hero */
+.hero{padding:64px 48px 48px;border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 10% -10%,#00d2ff0a 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 90% 110%,#c984f50a 0%,transparent 60%);pointer-events:none}
+.hero-eyebrow{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:18px}
+.hero-title{font-family:var(--display);font-size:clamp(32px,5vw,60px);font-weight:800;line-height:1.05;color:var(--text);margin-bottom:16px}
+.hero-title em{color:var(--go);font-style:normal}
+.hero-sub{font-size:13px;color:var(--muted);max-width:560px;line-height:1.75}
+.hero-meta{display:flex;gap:28px;margin-top:32px;flex-wrap:wrap}
+.meta-item .lbl{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:4px}
+.meta-item .val{font-family:var(--display);font-size:22px;font-weight:700}
+.c-go{color:var(--go)} .c-cpp{color:var(--cpp)} .c-py{color:var(--py)} .c-n{color:var(--text)}
+
+/* Layout */
+.layout{display:grid;grid-template-columns:210px 1fr;min-height:calc(100vh - 260px)}
+.sidebar{border-right:1px solid var(--border);padding:28px 0;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sb-cat{padding:4px 18px;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-top:18px}
+.sb-cat:first-child{margin-top:0}
+.nav-link{display:flex;align-items:center;gap:9px;padding:7px 18px;font-size:11px;color:var(--muted);text-decoration:none;border-left:2px solid transparent;transition:all .12s;cursor:pointer}
+.nav-link:hover{color:var(--text);background:#ffffff04}
+.nav-link.active{color:var(--go);border-left-color:var(--go);background:#00d2ff08}
+.nav-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
+/* Sections */
+.bench-section{border-bottom:1px solid var(--border);opacity:0;transform:translateY(14px);transition:opacity .35s ease,transform .35s ease}
+.bench-section.visible{opacity:1;transform:translateY(0)}
+.bench-head{display:flex;align-items:flex-start;gap:18px;padding:28px 36px 20px;border-bottom:1px solid var(--border)}
+.bench-idx{font-family:var(--display);font-size:11px;font-weight:700;color:var(--dim);letter-spacing:.1em;padding-top:3px;min-width:28px}
+.bench-name{font-family:var(--display);font-size:20px;font-weight:700;color:var(--text);margin-bottom:5px}
+.bench-desc{font-size:12px;color:var(--muted)}
+.badges{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap}
+.badge{font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:3px;font-weight:700}
+.b-cpu{background:#ff707018;color:var(--cat-cpu);border:1px solid #ff707028}
+.b-data{background:#5fe89a18;color:var(--cat-data);border:1px solid #5fe89a28}
+.b-io{background:#ffd35c18;color:var(--cat-io);border:1px solid #ffd35c28}
+.b-concurrency{background:#c984f518;color:var(--cat-concurrency);border:1px solid #c984f528}
+.b-internal{background:#6ea8e812;color:var(--cpp);border:1px solid #6ea8e828}
+
+/* Snippet row — columns side by side */
+.snippet-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));border-top:1px solid var(--border)}
+.snippet-col{border-right:1px solid var(--border);display:flex;flex-direction:column;min-width:0}
+.snippet-col:last-child{border-right:none}
+.snip-header{display:flex;align-items:center;gap:9px;padding:9px 14px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:2}
+.ldot{width:7px;height:7px;border-radius:2px;flex-shrink:0}
+.llabel{font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:700}
+.lfname{font-size:10px;color:var(--muted);margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px}
+.lang-go   .ldot{background:var(--go)}  .lang-go   .llabel{color:var(--go)}
+.lang-cpp  .ldot{background:var(--cpp)} .lang-cpp  .llabel{color:var(--cpp)}
+.lang-py   .ldot{background:var(--py)}  .lang-py   .llabel{color:var(--py)}
+.snip-body{flex:1;overflow-x:auto;background:var(--panel)}
+pre{margin:0;padding:14px 16px;font-family:var(--mono);font-size:11.5px;line-height:1.7;tab-size:4;white-space:pre}
+
+/* Tokens */
+.kw{color:#c084fc} .ty{color:#67e8f9} .fn{color:#93c5fd}
+.st{color:#86efac} .nm{color:#fca5a5} .cm{color:#3d5066;font-style:italic}
+.pp{color:#f9a8d4} .bi{color:#6ee7b7}
+
+.no-src{padding:40px;color:var(--muted);font-size:12px;grid-column:1/-1;text-align:center}
+
+/* Load overlay */
+#ov{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:999;transition:opacity .35s}
+#ov.gone{opacity:0;pointer-events:none}
+.ov-title{font-family:var(--display);font-size:17px;font-weight:700;color:var(--text)}
+.bar-wrap{width:260px;height:2px;background:var(--border);border-radius:1px;overflow:hidden}
+.bar-fill{height:100%;background:var(--go);width:0%;transition:width .18s ease}
+.ov-msg{font-size:11px;color:var(--muted)}
+
+/* Picker banner */
+.picker{padding:16px 36px;background:var(--surface);border-bottom:1px solid var(--border);display:none;align-items:center;gap:14px}
+.picker.show{display:flex}
+.pick-btn{font-family:var(--mono);font-size:11px;padding:7px 14px;background:transparent;border:1px solid var(--border2);color:var(--text);border-radius:4px;cursor:pointer;transition:border-color .12s}
+.pick-btn:hover{border-color:var(--go)}
+</style>
+</head>
+<body>
+
+<div id="ov" class="gone">
+  <div class="ov-title">Loading benchmarks…</div>
+  <div class="bar-wrap"><div class="bar-fill" id="bar"></div></div>
+  <div class="ov-msg" id="ovmsg">Initialising</div>
+</div>
+
+<header class="hero">
+  <div class="hero-eyebrow">Performance benchmark suite</div>
+  <h1 class="hero-title">Go vs <em>C++</em> vs Python<br>Source Presentation</h1>
+  <p class="hero-sub">Side-by-side source code for every benchmark.<br>Same algorithm, three languages.</p>
+  <div class="hero-meta">
+    <div class="meta-item"><span class="lbl">Benchmarks</span><span class="val c-n" id="mc">—</span></div>
+    <div class="meta-item"><span class="lbl">Go</span><span class="val c-go">compiled</span></div>
+    <div class="meta-item"><span class="lbl">C++</span><span class="val c-cpp">-O2</span></div>
+    <div class="meta-item"><span class="lbl">Python</span><span class="val c-py">interpreted</span></div>
+  </div>
+</header>
+
+<div class="picker show" id="picker">
+  <span style="font-size:12px;color:var(--muted)">
+    Run&nbsp;
+    <code style="background:var(--panel);padding:2px 6px;border-radius:3px;color:var(--go)">go run export_benchmarks.go --registry benchmarks.json --src ./tests --out presentation_data.json</code>
+    &nbsp;then load the output:
+  </span>
+  <label class="pick-btn">Load presentation_data.json <input type="file" accept=".json" id="jfile" style="display:none"></label>
+</div>
+
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main id="content"></main>
+</div>
+
+<script>
+const DATA = null;
+
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+// ── Tokeniser helpers ─────────────────────────────────────────────────────────
+// Strategy: work on escaped HTML so < > & are safe, then inject spans.
+// We do one pass: strings/comments first (to avoid tokenising inside them),
+// then keywords, then types/builtins, then numbers.
+
+function span(cls, s) {
+  return '<span class="' + cls + '">' + s + '</span>'
+}
+
+// Protect already-injected spans from further passes
+function tokenise(src, passes) {
+  // Each pass is [regex, replacer] where replacer receives match groups
+  // We skip content inside existing spans by splitting on them
+  let result = src
+  for (const [re, fn] of passes) {
+    result = result.replace(re, fn)
+  }
+  return result
+}
+
+function hlGo(raw) {
+  let s = esc(raw)
+  // strings (backtick, double-quote) — first so keywords inside strings stay plain
+  s = s.replace(/(&#96;[^&#96;]*&#96;|&quot;(?:[^&\\]|\\.|&amp;|&lt;|&gt;)*?&quot;|&#39;(?:[^&#39;\\]|\\.)*?&#39;)/g,
+    m => span('st', m))
+  // line comments
+  s = s.replace(/(\/\/[^\n]*)/g, m => span('cm', m))
+  // block comments
+  s = s.replace(/(\/\*[\s\S]*?\*\/)/g, m => span('cm', m))
+  // keywords
+  s = s.replace(/\b(package|import|func|return|if|else|for|range|var|const|type|struct|interface|go|defer|select|case|default|break|continue|fallthrough|switch|map|chan|make|new|len|cap|append|copy|close|delete|panic|recover|nil|true|false|iota)\b/g,
+    m => span('kw', m))
+  // types
+  s = s.replace(/\b(int|int8|int16|int32|int64|uint|uint8|uint16|uint32|uint64|uintptr|float32|float64|complex64|complex128|bool|byte|rune|string|error|any)\b/g,
+    m => span('ty', m))
+  // numbers
+  s = s.replace(/\b(\d[\d_]*(?:\.\d+)?(?:[eE][+-]?\d+)?)\b/g, m => span('nm', m))
+  return s
+}
+
+function hlCpp(raw) {
+  let s = esc(raw)
+  // must be first to avoid tokenising keywords inside strings/comments
+  s = s.replace(
+    /\b(int|long|short|char|bool|float|double|void|unsigned|signed|auto|const|static|inline|constexpr|return|if|else|for|while|do|switch|case|break|continue|default|class|struct|namespace|using|new|delete|nullptr|true|false|public|private|protected|virtual|override|template|typename|size_t|uint64_t|int64_t)\b/g,
+    m => span('kw', m))
+  s = s.replace(/(&quot;(?:[^&\\]|\\.|&amp;|&lt;|&gt;)*?&quot;)/g, m => span('st', m))
+  s = s.replace(/(\/\/[^\n]*)/g, m => span('cm', m))
+  s = s.replace(/(\/\*[\s\S]*?\*\/)/g, m => span('cm', m))
+  s = s.replace(
+    /(#\s*(?:include|define|pragma|ifdef|ifndef|endif|undef|if)[^\n]*)/g,
+    m => span('pp', m))
+  s = s.replace(/\b(\d[\d_]*(?:\.\d+)?(?:[eE][+-]?\d+)?(?:LL|ULL|UL|L|f|u)?)\b/g, m => span('nm', m))
+  return s
+}
+
+function hlPy(raw) {
+  let s = esc(raw)
+  // keywords, must be first to avoid tokenising inside strings/comments
+  s = s.replace(/\b(def|class|import|from|return|if|elif|else|for|while|in|not|and|or|is|None|True|False|pass|break|continue|lambda|with|as|try|except|finally|raise|yield|global|nonlocal|del|assert|async|await)\b/g,
+    m => span('kw', m))
+  // triple-quoted strings
+  s = s.replace(/(&quot;&quot;&quot;[\s\S]*?&quot;&quot;&quot;|&#39;&#39;&#39;[\s\S]*?&#39;&#39;&#39;)/g, m => span('st', m))
+  // single-line strings
+  s = s.replace(/(&quot;(?:[^&\\]|\\.|&amp;|&lt;|&gt;)*?&quot;|&#39;(?:[^&#39;\\]|\\.)*?&#39;)/g, m => span('st', m))
+  // comments
+  s = s.replace(/(#[^\n]*)/g, m => span('cm', m))
+  // builtins
+  s = s.replace(/\b(print|range|len|sum|int|str|float|list|dict|set|tuple|enumerate|zip|map|filter|sorted|reversed|open|isinstance|type|abs|max|min|round|bytearray|getattr|setattr|hasattr|append|join|format)\b/g,
+    m => span('bi', m))
+  // numbers
+  s = s.replace(/\b(\d[\d_]*(?:\.\d+)?(?:[eE][+-]?\d+)?)\b/g, m => span('nm', m))
+  return s
+}
+
+function highlight(lang, code) {
+  if (lang === 'go')     return hlGo(code)
+  if (lang === 'cpp')    return hlCpp(code)
+  if (lang === 'python') return hlPy(code)
+  return esc(code)
+}
+
+// ── Cat helpers ───────────────────────────────────────────────────────────────
+const CAT_DOT = {cpu:'#ff7070',data:'#5fe89a',io:'#ffd35c',concurrency:'#c984f5'}
+const LANG_LABEL = {go:'Go',cpp:'C++',python:'Python'}
+
+// ── Build sidebar ─────────────────────────────────────────────────────────────
+function buildNav(benchmarks) {
+  const sb = document.getElementById('sidebar')
+  const cats = {}
+  for (const b of benchmarks) (cats[b.category] = cats[b.category]||[]).push(b)
+  let h = ''
+  for (const [cat, items] of Object.entries(cats)) {
+    h += `<div class="sb-cat">${cat}</div>`
+    for (const b of items) {
+      h += `<a class="nav-link" href="#s-${b.name}" data-id="${b.name}">
+        <span class="nav-dot" style="background:${CAT_DOT[b.category]||'#fff3'}"></span>
+        ${b.name.replace(/_/g,' ')}
+      </a>`
+    }
+  }
+  sb.innerHTML = h
+}
+
+// ── Build one snippet row (all langs for one variant / one benchmark) ─────────
+function buildRow(files) {
+  if (!files || !files.length)
+    return '<div class="snippet-row"><div class="no-src">No source files.</div></div>'
+
+  const byLang = {}
+  for (const f of files) {
+    if (!byLang[f.language]) {
+      byLang[f.language] = []
+    }
+    byLang[f.language].push(f)
+  }
+
+  let cols = ''
+  for (const lang of ['go','cpp','python']) {
+    const lfiles = byLang[lang]
+    if (!lfiles) {
+      continue
+    }
+    for (const f of lfiles) {
+      let inner = `<div class="snip-header lang-${lang == "python" ? 'py' : lang}">
+          <span class="ldot"></span>
+          <span class="llabel">${LANG_LABEL[lang]}</span>
+          <span class="lfname">${f.filename}</span>
+        </div>
+        <div class="snip-body"><pre>${highlight(lang, f.content)}</pre></div>`
+        cols += `<div class="snippet-col">${inner}</div>`
+      }
+  }
+  return `<div class="snippet-row">${cols}</div>`
+}
+
+// ── Build content ─────────────────────────────────────────────────────────────
+function buildContent(benchmarks) {
+  const el = document.getElementById('content')
+  let h = ''
+  benchmarks.forEach((b, i) => {
+    const catBadge = `<span class="badge b-${b.category}">${b.category}</span>`
+    const intBadge = b.internal ? `<span class="badge b-internal">go variants</span>` : ''
+    h += `<section class="bench-section" id="s-${b.name}">
+      <div class="bench-head">
+        <div class="bench-idx">${String(i+1).padStart(2,'0')}</div>
+        <div>
+          <div class="bench-name">${b.name.replace(/_/g,' ')}</div>
+          <div class="bench-desc">${b.description}</div>
+          <div class="badges">${catBadge}${intBadge}</div>
+        </div>
+      </div>
+      ${buildRow(b.files)}
+    </section>`
+  })
+  el.innerHTML = h
+}
+
+// ── Scroll observer ───────────────────────────────────────────────────────────
+function observe() {
+  const io = new IntersectionObserver(entries => {
+    for (const e of entries) if (e.isIntersecting) e.target.classList.add('visible')
+    // active nav
+    const sections = [...document.querySelectorAll('.bench-section')]
+    const scrollY = window.scrollY + 120
+    let cur = null
+    for (const s of sections) { if (s.offsetTop <= scrollY) cur = s }
+    if (cur) {
+      const id = cur.id.replace('s-','')
+      document.querySelectorAll('.nav-link').forEach(a =>
+        a.classList.toggle('active', a.dataset.id === id))
+    }
+  }, {threshold:0.04, rootMargin:'0px 0px -40% 0px'})
+  document.querySelectorAll('.bench-section').forEach(s => io.observe(s))
+}
+
+// ── Loading helpers ───────────────────────────────────────────────────────────
+function prog(pct, msg) {
+  document.getElementById('bar').style.width = pct + '%'
+  document.getElementById('ovmsg').textContent = msg
+}
+
+function start() {
+  const ov = document.getElementById('ov')
+  ov.classList.remove('gone')
+}
+
+function done() {
+  const ov = document.getElementById('ov')
+  ov.classList.add('gone')
+  setTimeout(() => ov.remove(), 400)
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+function init(data) {
+  const benchmarks = (data.benchmarks || []).filter(b => b.files && b.files.length)
+  prog(35, 'Building navigation…')
+  document.getElementById('mc').textContent = benchmarks.length
+  buildNav(benchmarks)
+  prog(60, 'Rendering snippets…')
+  requestAnimationFrame(() => {
+    buildContent(benchmarks)
+    prog(90, 'Wiring observers…')
+    requestAnimationFrame(() => {
+      observe()
+      prog(100, 'Done')
+      setTimeout(done, 250)
+    })
+  })
+}
+
+// ── File picker ───────────────────────────────────────────────────────────────
+document.getElementById('jfile').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return
+  const r = new FileReader()
+  r.onload = ev => {
+    start()
+    try {
+      const data = JSON.parse(ev.target.result)
+      init(data);
+      document.getElementById('picker').classList.remove('show')
+    } catch(err) {
+      alert('Invalid JSON: ' + err.message)
+      done()
+    }
+  }
+  r.readAsText(f)
+})
+
+</script>
+</body>
+</html>
