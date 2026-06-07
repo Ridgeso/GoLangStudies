@@ -6,12 +6,15 @@ Compare performance across 10 algorithms in 3 languages.
 
 ```bash
 go run benchmark.go
+
+go run export_benchmarks.go
 ```
 
 Requires `go`, `g++`, and `python3` on your PATH.
 
 ## Options
 
+#### Running benchmarks
 ```bash
 go run benchmark.go --runs 5               # more runs = better averages (default: 3)
 go run benchmark.go --filter sort          # run only benchmarks matching a name
@@ -19,6 +22,11 @@ go run benchmark.go --no-python            # skip a language
 go run benchmark.go --timeout 120          # per-run timeout in seconds
 go run benchmark.go --output out.json      # custom results path
 go run benchmark.go --cpp-compiler=clang++ # change c++ compiler to custom
+```
+
+#### Required for `presentaiton.html`
+```bash
+go run export_benchmarks.go --registry benchmarks.json --src ./tests --out results/presentation_data.json
 ```
 
 ## Some Benchmarks
