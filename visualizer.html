@@ -9,23 +9,24 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:         #0a0c0f;
-    --surface:    #111418;
-    --border:     #1e2329;
-    --border2:    #2a3140;
-    --go:         #00acd7;
-    --cpp:        #659ad2;
-    --python:     #ffd43b;
-    --go-dim:     #00acd740;
-    --cpp-dim:    #659ad240;
-    --python-dim: #ffd43b40;
-    --text:       #e8eaed;
-    --muted:      #6b7685;
-    --accent:     #00acd7;
-    --red:        #ff6b6b;
-    --green:      #51cf66;
+    --bg: #f5f7fa;
+    --surface: #ffffff;
+    --border: #dde1e7;
+    --border2: #c4cad4;
+    --go: #0077aa;
+    --cpp: #1a56a0;
+    --python: #b87000;
+    --go-dim: #0077aa30;
+    --cpp-dim: #1a56a030;
+    --python-dim: #b8700030;
+    --text: #111827;
+    --muted: #4b5563;
+    --accent: #0077aa;
+    --red: #c0392b;
+    --green: #16a34a;
     --mono: 'IBM Plex Mono', monospace;
     --sans: 'IBM Plex Sans', sans-serif;
+    --hoverbg: #cdf1c7;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -34,7 +35,7 @@
     background: var(--bg);
     color: var(--text);
     font-family: var(--sans);
-    font-size: 14px;
+    font-size: 16px;
     min-height: 100vh;
   }
 
@@ -52,7 +53,7 @@
   }
   header h1 {
     font-family: var(--mono);
-    font-size: 15px;
+    font-size: 17px;
     font-weight: 600;
     letter-spacing: .02em;
     color: var(--text);
@@ -60,10 +61,10 @@
   header .pipe { color: var(--border2); }
   .tag {
     font-family: var(--mono);
-    font-size: 11px;
+    font-size: 13px;
     padding: 2px 8px;
     border-radius: 3px;
-    background: var(--border);
+    background: var(--hoverbg);
     color: var(--muted);
   }
   .tag.go     { background: #00acd715; color: var(--go);  border: 1px solid #00acd730; }
@@ -73,7 +74,7 @@
   .load-btn {
     margin-left: auto;
     font-family: var(--mono);
-    font-size: 12px;
+    font-size: 14px;
     padding: 6px 14px;
     background: transparent;
     border: 1px solid var(--border2);
@@ -99,13 +100,13 @@
     transition: border-color .2s, background .2s;
     cursor: pointer;
   }
-  #drop-zone.drag-over { border-color: var(--accent); background: #00acd708; }
+  #drop-zone.drag-over { border-color: var(--accent); background: #0077aa08; }
   #drop-zone svg { opacity: .3; }
-  #drop-zone p { color: var(--muted); font-family: var(--mono); font-size: 13px; }
-  #drop-zone small { color: var(--border2); font-family: var(--mono); font-size: 11px; }
+  #drop-zone p { color: var(--muted); font-family: var(--mono); font-size: 15px; }
+  #drop-zone small { color: var(--border2); font-family: var(--mono); font-size: 14px; }
   .or-btn {
     font-family: var(--mono);
-    font-size: 12px;
+    font-size: 14px;
     padding: 8px 20px;
     background: transparent;
     border: 1px solid var(--border2);
@@ -132,7 +133,7 @@
     background: var(--surface);
     padding: 16px 24px;
   }
-  .stat-cell .label { font-size: 11px; color: var(--muted); font-family: var(--mono); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .06em; }
+  .stat-cell .label { font-size: 13px; color: var(--muted); font-family: var(--mono); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .06em; }
   .stat-cell .value { font-family: var(--mono); font-size: 22px; font-weight: 600; }
   .stat-cell .value.go      { color: var(--go); }
   .stat-cell .value.cpp     { color: var(--cpp); }
@@ -158,7 +159,7 @@
   }
   .ctrl-label {
     font-family: var(--mono);
-    font-size: 11px;
+    font-size: 13px;
     color: var(--muted);
     text-transform: uppercase;
     letter-spacing: .06em;
@@ -169,7 +170,7 @@
   }
   .ctrl-btn {
     font-family: var(--mono);
-    font-size: 12px;
+    font-size: 14px;
     padding: 5px 12px;
     background: transparent;
     border: 1px solid var(--border2);
@@ -179,7 +180,7 @@
     transition: all .15s;
   }
   .ctrl-btn:hover { border-color: var(--border2); color: var(--text); }
-  .ctrl-btn.active { background: var(--border); color: var(--text); border-color: var(--border2); }
+  .ctrl-btn.active { background: var(--hoverbg); color: var(--text); border-color: var(--border2); }
   .divider { width: 1px; height: 20px; background: var(--border2); margin: 0 8px; }
 
   /* ── OVERVIEW CHART ── */
@@ -188,7 +189,7 @@
   }
   .section-title {
     font-family: var(--mono);
-    font-size: 11px;
+    font-size: 13px;
     text-transform: uppercase;
     letter-spacing: .1em;
     color: var(--muted);
@@ -204,13 +205,13 @@
     border-radius: 6px;
     padding: 20px 20px 12px;
   }
-  .overview-chart-wrap canvas { max-height: 280px; }
+  .overview-chart-wrap canvas { max-height: 420px; }
 
   /* ── GRID OF PER-BENCHMARK CHARTS ── */
   .grid-section { padding: 28px; }
   .bench-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(520px, 1fr));
     gap: 16px;
   }
   .bench-card {
@@ -229,13 +230,13 @@
   }
   .bench-name {
     font-family: var(--mono);
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 600;
     color: var(--text);
   }
   .bench-category {
     font-family: var(--mono);
-    font-size: 10px;
+    font-size: 12px;
     color: var(--muted);
     text-transform: uppercase;
     letter-spacing: .06em;
@@ -243,17 +244,17 @@
   .winner-badge {
     margin-left: auto;
     font-family: var(--mono);
-    font-size: 10px;
+    font-size: 12px;
     padding: 2px 7px;
     border-radius: 3px;
   }
   .winner-badge.go      { background: #00acd715; color: var(--go);  border: 1px solid #00acd730; }
   .winner-badge.cpp     { background: #659ad215; color: var(--cpp); border: 1px solid #659ad230; }
   .winner-badge.python  { background: #ffd43b15; color: var(--python);  border: 1px solid #ffd43b30; }
-  .bench-canvas-wrap { position: relative; height: 120px; }
+  .bench-canvas-wrap { position: relative; height: 200px; }
   .bench-stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
     gap: 4px;
     margin-top: 12px;
   }
@@ -262,9 +263,9 @@
     border-radius: 4px;
     padding: 6px 8px;
   }
-  .bstat .bl { font-family: var(--mono); font-size: 10px; margin-bottom: 3px; }
-  .bstat .bv { font-family: var(--mono); font-size: 12px; font-weight: 600; }
-  .bstat .bs { font-family: var(--mono); font-size: 10px; color: var(--muted); }
+  .bstat .bl { font-family: var(--mono); font-size: 14px; margin-bottom: 3px; }
+  .bstat .bv { font-family: var(--mono); font-size: 16px; font-weight: 600; }
+  .bstat .bs { font-family: var(--mono); font-size: 14px; color: var(--muted); }
   .bstat.go      .bl { color: var(--go); }
   .bstat.cpp     .bl { color: var(--cpp); }
   .bstat.python  .bl { color: var(--python); }
@@ -281,22 +282,22 @@
   thead tr { border-bottom: 1px solid var(--border); }
   thead th {
     font-family: var(--mono);
-    font-size: 11px;
+    font-size: 15px;
     text-transform: uppercase;
     letter-spacing: .06em;
     color: var(--muted);
-    padding: 12px 18px;
+    padding: 14px 20px;
     text-align: left;
     font-weight: 500;
   }
   thead th:not(:first-child) { text-align: right; }
   tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
   tbody tr:last-child { border-bottom: none; }
-  tbody tr:hover { background: #ffffff04; }
+  tbody tr:hover { background: #f0f4f8; }
   tbody td {
     font-family: var(--mono);
-    font-size: 12px;
-    padding: 11px 18px;
+    font-size: 17px;
+    padding: 15px 20px;
     color: var(--text);
   }
   tbody td:not(:first-child) { text-align: right; }
@@ -313,7 +314,7 @@
   /* ── FILTER INPUT ── */
   #filter-input {
     font-family: var(--mono);
-    font-size: 12px;
+    font-size: 14px;
     padding: 5px 10px;
     background: transparent;
     border: 1px solid var(--border2);
@@ -330,7 +331,7 @@
   /* ── INTERNAL OVERVIEW — one chart-card per benchmark ── */
   .internal-overview-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(600px, 1fr));
     gap: 16px;
   }
   .internal-overview-card {
@@ -341,7 +342,7 @@
   }
   .internal-overview-card .ioc-title {
     font-family: var(--mono);
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--text);
     margin-bottom: 10px;
@@ -350,7 +351,7 @@
     gap: 8px;
   }
   .internal-overview-card .ioc-title .ioc-cat {
-    font-size: 10px;
+    font-size: 12px;
     color: var(--muted);
     text-transform: uppercase;
     letter-spacing: .06em;
@@ -361,7 +362,7 @@
   /* ── INTERNAL TABLES — stacked per-benchmark ── */
   .internal-tables-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(600px, 1fr));
     gap: 16px;
   }
   .internal-table-card {
@@ -379,13 +380,13 @@
   }
   .internal-table-card .itc-name {
     font-family: var(--mono);
-    font-size: 12px;
+    font-size: 16px;
     font-weight: 600;
     color: var(--text);
   }
   .internal-table-card .itc-cat {
     font-family: var(--mono);
-    font-size: 10px;
+    font-size: 14px;
     color: var(--muted);
     text-transform: uppercase;
     letter-spacing: .06em;
@@ -393,7 +394,7 @@
   .internal-table-card table { width: 100%; border-collapse: collapse; }
   .internal-table-card thead th {
     font-family: var(--mono);
-    font-size: 10px;
+    font-size: 14px;
     text-transform: uppercase;
     letter-spacing: .06em;
     color: var(--muted);
@@ -408,7 +409,7 @@
   .internal-table-card tbody tr:hover { background: #ffffff04; }
   .internal-table-card tbody td {
     font-family: var(--mono);
-    font-size: 12px;
+    font-size: 16px;
     padding: 9px 14px;
     color: var(--text);
   }
@@ -474,7 +475,7 @@
         <button class="ctrl-btn" onclick="setScale(this,'logarithmic')">log</button>
       </div>
       <div class="divider"></div>
-      <span class="ctrl-label">view</span>
+      <span class="ctrl-label">Show Tests:</span>
       <div class="btn-group">
         <button class="ctrl-btn active" id="btn-multi"    onclick="setView(this,'multi')">multi-lang</button>
         <button class="ctrl-btn"        id="btn-internal" onclick="setView(this,'internal')">go variants</button>
@@ -516,7 +517,7 @@ let overviewChart = null;
 const miniCharts = {};
 const internalOverviewCharts = {};
 
-const LANG_COLOR = { go: '#00acd7', 'c++': '#659ad2', python: '#ffd43b' };
+const LANG_COLOR = { go: '#0077aa', "c++": '#1a56a0', python: '#b87000' };
 
 const PALETTE = ['#00acd7', '#f97316', '#a78bfa', '#34d399', '#fb7185', '#facc15', '#38bdf8', '#4ade80'];
 
@@ -542,7 +543,7 @@ function labelFor(r) {
 }
 
 // Chart.js global defaults
-Chart.defaults.color = '#6b7685';
+Chart.defaults.color = '#4b5563';
 Chart.defaults.font.family = "'IBM Plex Mono', monospace";
 Chart.defaults.font.size = 11;
 
@@ -760,7 +761,7 @@ function renderSummary() {
       const color = w ? PALETTE[ci] : '#6b7685';
       return `<div class="stat-cell">
         <div class="label">${b.replace(/_/g,' ')}</div>
-        <div class="value" style="color:${color};font-size:15px">${w ? w.test_name : '—'} <span style="font-size:12px;color:var(--muted)">${w ? fmtTime(w.exec_mean_s) : ''}</span></div>
+        <div class="value" style="color:${color};font-size:17px">${w ? w.test_name : '—'} <span style="font-size:14px;color:var(--muted)">${w ? fmtTime(w.exec_mean_s) : ''}</span></div>
       </div>`;
     });
     strip.innerHTML = cells.join('') ||
@@ -844,7 +845,7 @@ function renderMultiOverview(container) {
           title: {
             display:true,
             text:'seconds',
-            font:{size:11}
+            font:{size:13}
           },
           grid:{color:'#1e232980'},
           ticks:{callback:v=>fmtTime(v)}
@@ -912,12 +913,12 @@ function renderInternalOverview(container) {
             grid: {color:'#1e232960'},
             ticks: {
               callback: v => fmtTime(v),
-              font:{size:10}
+              font:{size:12}
             }
           },
           y: {
             grid:{display:false},
-            ticks:{font:{size:11}}
+            ticks:{font:{size:13}}
           },
         },
       },
@@ -970,7 +971,7 @@ function renderGrid() {
     }).join('');
 
     // mini chart height scales with result count
-    const miniH = Math.max(100, results.length * 22);
+    const miniH = Math.max(300, results.length * 22);
 
     const card = document.createElement('div');
     card.className = 'bench-card';
@@ -1006,14 +1007,14 @@ function renderGrid() {
         },
         scales: {
           x: { grid: { display: false },
-          ticks: { font: { size: 10 } }
+          ticks: { font: { size: 12 } }
         },
           y: {
             type: scaleType,
-            grid: { color: '#1e232980' },
+            grid: { color: '#dde1e7' },
             ticks: {
               callback: v => fmtTime(v),
-              font: { size: 10 }
+              font: { size: 12 }
             }
           },
         },
@@ -1123,7 +1124,7 @@ function renderInternalTables(container) {
             <span style="color:${color};font-weight:600">${r.test_name}</span>
           </td>
           <td>${fmtTime(r.exec_mean_s)}</td>
-          <td style="color:var(--muted);font-size:11px">${fmtTime(r.exec_min_s)} – ${fmtTime(r.exec_max_s)}</td>
+          <td style="color:var(--muted);font-size:13px">${fmtTime(r.exec_min_s)} – ${fmtTime(r.exec_max_s)}</td>
           <td style="color:${speedupColor}">${vsSlowRatio != null ? vsSlowRatio.toFixed(1)+'×' : '—'}</td>
         </tr>`;
       }).join('');

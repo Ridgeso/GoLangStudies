@@ -9,22 +9,42 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#080b0f; --surface:#0e1318; --panel:#0c1117;
-  --border:#1b2530; --border2:#243040;
-  --text:#dde4ed; --muted:#5a6a7a; --dim:#2e3e50;
-  --go:#00d2ff; --cpp:#6ea8e8; --py:#ffd35c;
-  --cat-cpu:#ff7070; --cat-data:#5fe89a; --cat-io:#ffd35c; --cat-concurrency:#c984f5;
-  --mono:'Space Mono',monospace; --display:'Syne',sans-serif;
+  --bg:#f4f6f9;
+  --surface:#ffffff;
+  --panel:#f8f9fc;
+  --border:#d8dde6;
+  --border2:#b0b9c8;
+  --text:#111827;
+  --muted:#4b5563;
+  --dim:#9ca3af;
+  --go:#0077aa;
+  --cpp:#1a4fa0;
+  --py:#b87000;
+  --cat-cpu:#c0392b;
+  --cat-data:#15803d;
+  --cat-io:#b45309;
+  --cat-concurrency:#7c3aed;
+  --mono:'Space Mono',monospace;
+  --display:'Syne',sans-serif;
 }
-html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;line-height:1.6;min-height:100vh}
+html{
+  scroll-behavior:smooth
+}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--mono);
+  font-size:13px;
+  line-height:1.6;
+  min-height:100vh
+}
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
 
 /* Hero */
 .hero{padding:64px 48px 48px;border-bottom:1px solid var(--border);position:relative;overflow:hidden}
-.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 10% -10%,#00d2ff0a 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 90% 110%,#c984f50a 0%,transparent 60%);pointer-events:none}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 10% -10%,#0077aa0d 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 90% 110%,#7c3aed0d 0%,transparent 60%);pointer-events:none}
 .hero-eyebrow{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:18px}
 .hero-title{font-family:var(--display);font-size:clamp(32px,5vw,60px);font-weight:800;line-height:1.05;color:var(--text);margin-bottom:16px}
 .hero-title .span-go{color:var(--go);font-style:normal}
@@ -42,8 +62,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13
 .sb-cat{padding:4px 18px;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-top:18px}
 .sb-cat:first-child{margin-top:0}
 .nav-link{display:flex;align-items:center;gap:9px;padding:7px 18px;font-size:11px;color:var(--muted);text-decoration:none;border-left:2px solid transparent;transition:all .12s;cursor:pointer}
-.nav-link:hover{color:var(--text);background:#ffffff04}
-.nav-link.active{color:var(--go);border-left-color:var(--go);background:#00d2ff08}
+.nav-link:hover{color:var(--text);background:#e8edf5}
+.nav-link.active{color:var(--go);border-left-color:var(--go);background:#e0f0f8}
 .nav-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 
 /* Sections */
@@ -55,11 +75,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13
 .bench-desc{font-size:12px;color:var(--muted)}
 .badges{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap}
 .badge{font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:3px;font-weight:700}
-.b-cpu{background:#ff707018;color:var(--cat-cpu);border:1px solid #ff707028}
-.b-data{background:#5fe89a18;color:var(--cat-data);border:1px solid #5fe89a28}
-.b-io{background:#ffd35c18;color:var(--cat-io);border:1px solid #ffd35c28}
-.b-concurrency{background:#c984f518;color:var(--cat-concurrency);border:1px solid #c984f528}
-.b-internal{background:#6ea8e812;color:var(--cpp);border:1px solid #6ea8e828}
+.b-cpu{background:#fde8e8;color:var(--cat-cpu);border:1px solid #f5aaaa}
+.b-data{background:#dcfce7;color:var(--cat-data);border:1px solid #86efac}
+.b-io{background:#fef3c7;color:var(--cat-io);border:1px solid #fcd34d}
+.b-concurrency{background:#ede9fe;color:var(--cat-concurrency);border:1px solid #c4b5fd}
+.b-internal{background:#dbeafe;color:var(--cpp);border:1px solid #93c5fd}
 
 /* Snippet row — columns side by side */
 .snippet-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));border-top:1px solid var(--border)}
@@ -73,12 +93,17 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13
 .lang-cpp  .ldot{background:var(--cpp)} .lang-cpp  .llabel{color:var(--cpp)}
 .lang-py   .ldot{background:var(--py)}  .lang-py   .llabel{color:var(--py)}
 .snip-body{flex:1;overflow-x:auto;background:var(--panel)}
-pre{margin:0;padding:14px 16px;font-family:var(--mono);font-size:11.5px;line-height:1.7;tab-size:4;white-space:pre}
+pre{margin:0;padding:16px 20px;font-family:var(--mono);font-size:15px;line-height:1.75;tab-size:4;white-space:pre}
 
-/* Tokens */
-.kw{color:#c084fc} .ty{color:#67e8f9} .fn{color:#93c5fd}
-.st{color:#86efac} .nm{color:#fca5a5} .cm{color:#3d5066;font-style:italic}
-.pp{color:#f9a8d4} .bi{color:#6ee7b7}
+/* Tokens — high contrast on light background */
+.kw{color:#7c3aed;font-weight:600}  /* keywords: violet */
+.ty{color:#0e7490}                   /* types: teal */
+.fn{color:#1d4ed8}                   /* functions: blue */
+.st{color:#15803d}                   /* strings: green */
+.nm{color:#b45309}                   /* numbers: amber */
+.cm{color:#6b7280;font-style:italic} /* comments: gray */
+.pp{color:#be185d}                   /* preprocessor: pink */
+.bi{color:#0369a1}                   /* builtins: sky blue */
 
 .no-src{padding:40px;color:var(--muted);font-size:12px;grid-column:1/-1;text-align:center}
 
@@ -91,10 +116,10 @@ pre{margin:0;padding:14px 16px;font-family:var(--mono);font-size:11.5px;line-hei
 .ov-msg{font-size:11px;color:var(--muted)}
 
 /* Picker banner */
-.picker{padding:16px 36px;background:var(--surface);border-bottom:1px solid var(--border);display:none;align-items:center;gap:14px}
+.picker{padding:16px 36px;background:var(--surface);border-bottom:1px solid var(--border);display:none;align-items:center;gap:14px;flex-wrap:wrap}
 .picker.show{display:flex}
 .pick-btn{font-family:var(--mono);font-size:11px;padding:7px 14px;background:transparent;border:1px solid var(--border2);color:var(--text);border-radius:4px;cursor:pointer;transition:border-color .12s}
-.pick-btn:hover{border-color:var(--go)}
+.pick-btn:hover{border-color:var(--go);color:var(--go)}
 </style>
 </head>
 <body>
@@ -133,8 +158,23 @@ const DATA = null;
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
 // ── Tokeniser helpers ─────────────────────────────────────────────────────────
+// Strategy: work on escaped HTML so < > & are safe, then inject spans.
+// We do one pass: strings/comments first (to avoid tokenising inside them),
+// then keywords, then types/builtins, then numbers.
+
 function span(cls, s) {
   return '<span class="' + cls + '">' + s + '</span>'
+}
+
+// Protect already-injected spans from further passes
+function tokenise(src, passes) {
+  // Each pass is [regex, replacer] where replacer receives match groups
+  // We skip content inside existing spans by splitting on them
+  let result = src
+  for (const [re, fn] of passes) {
+    result = result.replace(re, fn)
+  }
+  return result
 }
 
 function hlGo(raw) {
