@@ -383,7 +383,10 @@ func runCmd(cwd string, cmd string, args ...string) RunResult {
 }
 
 func compileGo(src, out string) (float64, string, bool) {
-    r := runCmd("", *goCompiler, "build", "-o", out, src)
+    dir := filepath.Dir(src)
+    file := filepath.Base(src)
+    r := runCmd(dir, *goCompiler, "build", "-o", out, file)
+    fmt.Println(r.Stderr)
     return r.WallSecond, r.Stderr, r.ExitCode == 0
 }
 
@@ -393,12 +396,13 @@ func compileCpp(src, out string) (float64, string, bool) {
 }
 
 func buildTestSources(testSrc string) ([]string, error) {
+    allowed := map[string]bool{".go": true, ".cpp": true, ".py": true}
 	var srcs []string
 	srcBase := filepath.Join(SRC, testSrc)
 	err := filepath.Walk(
         srcBase,
         func(path string, f os.FileInfo, err error) error {
-            if filepath.Ext(path) != "" {
+            if allowed[filepath.Ext(path)] {
                 srcs = append(srcs, path)
             }
             return err
