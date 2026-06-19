@@ -3,6 +3,7 @@
 #include <vector>
 #include <sstream>
 
+//not a real comparison, a 3rd party library is needed, e.g. https://rapidjson.org/
 struct Item
 {
     int id;

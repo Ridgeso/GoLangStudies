@@ -15,7 +15,7 @@ func main() {
 		buf = strconv.AppendInt(buf, int64(i), 10)
 		buf = append(buf, ' ')
 	}
-	s := unsafe.String(
+	s := unsafe.String( //unika kopiowania string(buf)
 		unsafe.SliceData(buf),
 		len(buf),
 	)

@@ -2,7 +2,7 @@
 #include <vector>
 
 int32_t sieve(int32_t n) {
-    auto isPrime = std::vector<bool>(n+1, true);
+    auto isPrime = std::vector<bool>(n+1, true); //std::vector<char> would actually be faster
     
     for (int32_t i = 2; i*i <= n; i++)
     {

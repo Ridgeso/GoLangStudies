@@ -24,6 +24,7 @@
     "name": "fibonacci_iter",
     "src_path": "fibonacci/iterative",
     "category": "cpu",
+    "category": "cpu",
     "description": "Fibonacci(40) iterative",
     "internal": false
   },
@@ -54,6 +55,13 @@
     "category": "data",
     "description": "JSON encode/decode",
     "internal": false
+  },
+  {
+    "name": "json_parsing_variants",
+    "src_path": "json_parser/variants",
+    "category": "data",
+    "description": "JSON encode/decode",
+    "internal": true
   },
   {
     "name": "matrix_mul",

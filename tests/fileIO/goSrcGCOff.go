@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-    debug.SetGCPercent(-1)
+    debug.SetGCPercent(-1) //the file I/O benchmark allocates heavily (bufio, scanner tokens)
 	path := "tmp/bench_io_go.txt"
 
 	f, _ := os.Create(path)

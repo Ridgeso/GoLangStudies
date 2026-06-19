@@ -7,8 +7,7 @@ path = tmp / "bench_io_py.txt"
 tmp.mkdir()
 
 with open(path, "w+") as f:
-    for i in range(1_000_000):
-        f.write(f"{i}\n")
+    f.writelines(f"{i}\n" for i in range(1_000_000))
 
 with open(path) as f:
     count = sum(1 for _ in f)
